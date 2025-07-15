@@ -1,16 +1,51 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, XAxis, YAxis,CartesianGrid,Tooltip,ResponsiveContainer,} from "recharts";
+import axios from "axios";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line
+} from "recharts";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
 
+  // Estados nuevos
+  const [topProducts, setTopProducts] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [consumoData, setConsumoData] = useState([]);
+
+  // Token check + llamadas a la API
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
+      return;
     }
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    // Obtener productos más vistos
+    axios
+      .get("http://localhost:8000/stats/productos-mas-vistos", config)
+      .then((res) => setTopProducts(res.data))
+      .catch(() => setTopProducts([]));
+
+    // Obtener recomendaciones
+    axios
+      .get("http://localhost:8000/modelo/entrenar", config)
+      .then((res) => setRecommendations(res.data.recomendaciones))
+      .catch(() => setRecommendations([]));
+
+    // Obtener evolución del consumo (simulado)
+    axios
+      .get("http://localhost:8000/stats/consumo-responsable-usuario", config)
+      .then((res) => setConsumoData(res.data))
+      .catch(() => setConsumoData([]));
   }, [navigate]);
 
   const chartData = [
@@ -82,6 +117,56 @@ function Dashboard() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* Panel de productos más vistos */}
+      <div className="dashboard-graph-section">
+        <h2>Productos más vistos</h2>
+        {topProducts.length === 0 ? (
+          <p>No hay datos disponibles.</p>
+        ) : (
+          <ul className="dashboard-list">
+            {topProducts.map((p, idx) => (
+              <li key={idx}>
+                Producto ID: {p.product_id} – Visitas: {p.visitas}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Panel de recomendaciones */}
+      <div className="dashboard-graph-section">
+        <h2>Recomendaciones para ti</h2>
+        {recommendations.length === 0 ? (
+          <p>No hay recomendaciones disponibles.</p>
+        ) : (
+          <ul className="dashboard-list">
+            {recommendations.map((r, idx) => (
+              <li key={idx}>
+                {r.name} ({r.category}) – Score: {r.score.toFixed(2)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Evolución del consumo responsable */}
+      <div className="dashboard-graph-section">
+        <h2>Evolución del consumo responsable</h2>
+        {consumoData.length === 0 ? (
+          <p>No hay datos aún.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={consumoData}>
+              <CartesianGrid stroke="#ccc" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="score" stroke="#4caf50" />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </main>
   );

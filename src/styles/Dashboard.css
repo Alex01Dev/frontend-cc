@@ -102,3 +102,37 @@
     transform: translateY(0);
   }
 }
+
+/* Sección de gráficos y listas */
+.dashboard-graph-section {
+  margin-top: 40px;
+}
+
+.dashboard-graph-section h2 {
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  color: #2d5a2d;
+}
+
+/* Lista de productos/recomendaciones */
+.dashboard-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-list li {
+  background-color: #ffffff;
+  border: 1px solid #cce3cc;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background-color 0.3s;
+}
+
+.dashboard-list li:hover {
+  background-color: #edf9ed;
+}
