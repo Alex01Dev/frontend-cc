@@ -5,6 +5,20 @@
   font-family: "Segoe UI", sans-serif;
 }
 
+.user-search {
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.user-search input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 280px;
+}
+
+
 .users-main h2 {
   margin-bottom: 1rem;
   color: #2e7d32;

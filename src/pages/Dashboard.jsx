@@ -59,11 +59,19 @@ function Dashboard() {
 
   return (
     <main className="dashboard-main">
-      <div className="dashboard-header">
-        <h1>Bienvenidos a Consumo Consciente</h1>
-        <p>Panel principal del Sistema.</p>
-      </div>
 
+      <div className="dashboard-hero">
+      <div className="hero-overlay">
+        <h1>Bienvenidos a Consumo Consciente</h1>
+        <p>
+          Esta plataforma permite analizar y mejorar tus hábitos de consumo con productos sustentables,
+          recomendaciones inteligentes y visualizaciones que te ayudan a tomar decisiones más responsables.
+        </p>
+      </div>
+     </div>
+
+      <p className="dashboard-subtitle">Panel principal del Sistema</p>
+      
       <div className="dashboard-grid">
         <div className="dashboard-card">
           <img

@@ -1,32 +1,28 @@
 import { useState } from "react";
+import axios from "../api/axiosConfig"; // <- Tu configuración con token
 import "../styles/Login.css";
-
-// Usuario mock para login de prueba
-const mockUser = {
-  nombre_usuario: "bere",
-  contrasena: "123456",
-};
 
 function Login() {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validación mock
-    if (
-      nombreUsuario === mockUser.nombre_usuario &&
-      contrasena === mockUser.contrasena
-    ) {
-      alert("Login exitoso! Redirigiendo al dashboard...");
-      localStorage.setItem("token", "mock-token-123");
-      localStorage.setItem("usuarioLogueado", nombreUsuario);
+    try {
+      const response = await axios.post("/login", {
+        username: nombreUsuario,
+        password: contrasena,
+      });
 
+      const { access_token, logged_user } = response.data;
+
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("usuarioLogueado", logged_user);
 
       window.location.href = "/dashboard";
-    } else {
+    } catch (err) {
       setError("Usuario o contraseña incorrectos");
     }
   };
@@ -39,7 +35,7 @@ function Login() {
         <div className="login-image">
           <img
             src="https://i.postimg.cc/3wpJ8f4f/Logo-Consumo-Consciente.png"
-            alt="Imagen de login"
+            alt="Logo del sistema"
           />
         </div>
 
@@ -68,7 +64,10 @@ function Login() {
             />
 
             <button type="submit">Entrar</button>
-            {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
+
+            {error && (
+              <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
+            )}
           </form>
         </div>
       </div>

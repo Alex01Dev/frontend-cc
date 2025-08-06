@@ -1,63 +1,102 @@
 .products-main {
-  padding: 2rem;
-  background-color: #f5fdf5;
-  min-height: 100vh;
-  font-family: "Segoe UI", sans-serif;
+  padding: 90px 30px 30px 30px;
+  background-color: #f9fff9;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .products-main h2 {
-  margin-bottom: 1rem;
-  color: #2e7d32;
-}
-
-.products-main table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.products-main th,
-.products-main td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e0e0e0;
   text-align: center;
+  font-size: 2rem;
+  color: #2d5a2d;
+  margin-bottom: 20px;
 }
 
-.products-main th {
+.filters {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.filters input,
+.filters select {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  min-width: 220px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.product-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.15);
+  border-color: #3b7d3b;
+}
+
+.product-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+}
+
+.product-info {
+  padding: 16px;
+}
+
+.product-info h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  color: #2d5a2d;
+}
+
+.product-info p {
+  font-size: 0.95rem;
+  margin: 4px 0;
+}
+
+.product-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.product-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.product-actions button:hover {
+  opacity: 0.9;
+}
+
+.product-actions .delete {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.product-actions button:not(.delete) {
   background-color: #3b7d3b;
   color: white;
-  font-weight: 600;
-}
-
-.products-main td {
-  color: #333;
-}
-
-.products-main tr:hover {
-  background-color: #e8f5e9;
-}
-
-.products-main button {
-  margin: 2px;
-  padding: 6px 10px;
-  background-color: #388e3c;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
-}
-
-.products-main button:hover {
-  background-color: #2e7d32;
-}
-
-.message {
-  margin-bottom: 1rem;
-  font-weight: bold;
 }

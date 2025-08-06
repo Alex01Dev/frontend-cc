@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import axios from "../api/axiosConfig";
 import "../styles/ProductForm.css";
 
-function ProductForm({ onProductCreated, productToEdit, clearEdit }) {
+function ProductForm({ product, onClose, onSaved }) {
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -14,10 +14,16 @@ function ProductForm({ onProductCreated, productToEdit, clearEdit }) {
   const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
-    if (productToEdit) {
-      setForm(productToEdit);
+    if (product) {
+      setForm({
+        name: product.name || "",
+        category: product.category || "",
+        carbon_footprint: product.carbon_footprint || "",
+        recyclable_packaging: product.recyclable_packaging || false,
+        local_origin: product.local_origin || false,
+      });
     }
-  }, [productToEdit]);
+  }, [product]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -29,72 +35,88 @@ function ProductForm({ onProductCreated, productToEdit, clearEdit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-
     try {
-      if (productToEdit) {
-        // Modo edición
-        await axios.put(`http://localhost:8000/products/${productToEdit.id}`, form, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMensaje("Producto actualizado.");
-      } else {
-        // Modo creación
-        await axios.post("http://localhost:8000/products/create", form, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMensaje("Producto creado exitosamente.");
-      }
-
-      setForm({
-        name: "",
-        category: "",
-        carbon_footprint: "",
-        recyclable_packaging: false,
-        local_origin: false,
-      });
-
-      if (onProductCreated) onProductCreated();
-      if (clearEdit) clearEdit();
-    } catch (error) {
-      setMensaje("Error al guardar el producto.");
+      await axios.put(`/products/${product.id}`, form);
+      setMensaje("Producto actualizado exitosamente.");
+      if (onSaved) onSaved();
+    } catch (err) {
+      console.error(err);
+      setMensaje("Error al actualizar el producto.");
     }
   };
 
   return (
-    <form className="product-form" onSubmit={handleSubmit}>
-      <h2>{productToEdit ? "Editar Producto" : "Agregar Producto Sustentable"}</h2>
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <button className="modal-close" onClick={onClose}>×</button>
 
-      <label>Nombre:</label>
-      <input type="text" name="name" value={form.name} onChange={handleChange} required />
+        <form className="product-form" onSubmit={handleSubmit}>
+          <h2>Editar Producto</h2>
 
-      <label>Categoría:</label>
-      <input type="text" name="category" value={form.category} onChange={handleChange} required />
+          {mensaje && <p className="message">{mensaje}</p>}
 
-      <label>Huella de carbono:</label>
-      <input
-        type="number"
-        name="carbon_footprint"
-        value={form.carbon_footprint}
-        onChange={handleChange}
-        required
-      />
+          <label>Nombre:</label>
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
 
-      <label>
-        <input type="checkbox" name="recyclable_packaging" checked={form.recyclable_packaging} onChange={handleChange} />
-        Empaque reciclable
-      </label>
+          <label>Categoría:</label>
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Selecciona una categoría</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Ropa">Ropa</option>
+            <option value="Tecnologia">Tecnología</option>
+            <option value="Limpieza">Limpieza</option>
+            <option value="Hogar">Hogar</option>
+            <option value="Salud">Salud</option>
+            <option value="Papeleria">Papelería</option>
+            <option value="Otros">Otros</option>
+          </select>
 
-      <label>
-        <input type="checkbox" name="local_origin" checked={form.local_origin} onChange={handleChange} />
-        Origen local
-      </label>
+          <label>Huella de carbono (kg CO₂):</label>
+          <input
+            type="number"
+            name="carbon_footprint"
+            value={form.carbon_footprint}
+            onChange={handleChange}
+            required
+            step="0.01"
+            min="0"
+          />
 
-      <button type="submit">{productToEdit ? "Actualizar" : "Crear"}</button>
-      {productToEdit && <button type="button" onClick={clearEdit} className="cancel-edit">Cancelar</button>}
+          <label>
+            <input
+              type="checkbox"
+              name="recyclable_packaging"
+              checked={form.recyclable_packaging}
+              onChange={handleChange}
+            />
+            Empaque reciclable
+          </label>
 
-      {mensaje && <p className="message">{mensaje}</p>}
-    </form>
+          <label>
+            <input
+              type="checkbox"
+              name="local_origin"
+              checked={form.local_origin}
+              onChange={handleChange}
+            />
+            Origen local
+          </label>
+
+          <button type="submit">Guardar cambios</button>
+        </form>
+      </div>
+    </div>
   );
 }
 

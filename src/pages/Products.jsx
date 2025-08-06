@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../api/axiosConfig";
 import ProductForm from "../components/ProductForm";
 import "../styles/Products.css";
 
@@ -7,84 +7,103 @@ function Products() {
   const [products, setProducts] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const [productToEdit, setProductToEdit] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:8000/products/get", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get("/products/get");
       setProducts(res.data);
-    } catch (error) {
-      console.error("Error al cargar productos:", error);
-    }
-  };
-
-  const eliminarProducto = async (id) => {
-    if (!window.confirm("¿Eliminar este producto?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:8000/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMensaje("Producto eliminado.");
-      fetchProducts();
     } catch (err) {
-      setMensaje("Error al eliminar producto.");
+      setMensaje("Error al obtener productos.");
     }
-  };
-
-  const handleEdit = (product) => {
-    setProductToEdit(product);
-  };
-
-  const clearEdit = () => {
-    setProductToEdit(null);
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  const eliminarProducto = async (id) => {
+    if (!window.confirm("¿Eliminar este producto?")) return;
+    try {
+      await axios.delete(`/products/${id}`);
+      setMensaje("Producto eliminado.");
+      fetchProducts();
+    } catch {
+      setMensaje("Error al eliminar.");
+    }
+  };
+
+  const handleEdit = (producto) => {
+    setProductToEdit(producto);
+    setShowModal(true);
+  };
+
+  const filteredProducts = products.filter((p) => {
+    const matchesName = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter ? p.category === categoryFilter : true;
+    return matchesName && matchesCategory;
+  });
+
   return (
     <main className="products-main">
-      <h2>Listado de Productos Sustentables</h2>
-
+      <h2>Lista de Productos</h2>
       {mensaje && <p className="message">{mensaje}</p>}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Categoría</th>
-            <th>Huella CO₂</th>
-            <th>Reciclable</th>
-            <th>Local</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((prod) => (
-            <tr key={prod.id}>
-              <td>{prod.name}</td>
-              <td>{prod.category}</td>
-              <td>{prod.carbon_footprint} kg</td>
-              <td>{prod.recyclable_packaging ? "Sí" : "No"}</td>
-              <td>{prod.local_origin ? "Sí" : "No"}</td>
-              <td>
-                <button onClick={() => handleEdit(prod)}>Editar</button>
-                <button onClick={() => eliminarProducto(prod.id)}>Eliminar</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="filters">
+        <input
+          type="text"
+          placeholder="Buscar por nombre..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="">Todas las categorías</option>
+          <option value="Alimentos">Alimentos</option>
+          <option value="Ropa">Ropa</option>
+          <option value="Tecnologia">Tecnología</option>
+          <option value="Limpieza">Limpieza</option>
+          <option value="Hogar">Hogar</option>
+          <option value="Salud">Salud</option>
+          <option value="Papeleria">Papelería</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
 
-      <ProductForm
-        onProductCreated={fetchProducts}
-        productToEdit={productToEdit}
-        clearEdit={clearEdit}
-      />
+      <div className="product-grid">
+        {filteredProducts.map((prod) => (
+          <div key={prod.id} className="product-card">
+            <img src={prod.image_url} alt={prod.name} />
+            <div className="product-info">
+              <h3>{prod.name}</h3>
+              <p>Categoría: <strong>{prod.category}</strong></p>
+              <p>Huella CO₂: <strong>{prod.carbon_footprint} kg</strong></p>
+              <p>Reciclable: {prod.recyclable_packaging ? "Sí ♻️" : "No"}</p>
+              <p>Origen local: {prod.local_origin ? "Sí 🏡" : "No"}</p>
+              <div className="product-actions">
+                <button onClick={() => handleEdit(prod)}>Editar</button>
+                <button className="delete" onClick={() => eliminarProducto(prod.id)}>Eliminar</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showModal && (
+        <ProductForm
+          product={productToEdit}
+          onClose={() => setShowModal(false)}
+          onSaved={() => {
+            setShowModal(false);
+            fetchProducts();
+            setProductToEdit(null);
+          }}
+        />
+      )}
     </main>
   );
 }
