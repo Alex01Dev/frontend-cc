@@ -4,7 +4,7 @@ import "../styles/Comments.css";
 
 function Comments() {
   const [comments, setComments] = useState([]);
-  const [productId] = useState(1); // Puedes cambiarlo por props si quieres dinamismo
+  const [productId] = useState(10); 
   const [mensaje, setMensaje] = useState("");
 
   const fetchComments = async () => {
@@ -34,7 +34,7 @@ function Comments() {
           {comments.map((c) => (
             <li key={c.id} className="comment-card">
               <div className="comment-header">
-                <strong>Usuario #{c.user_id}</strong> {/* Antes: c.user.username */}
+                <strong>Usuario #{c.user_id}</strong> {}
                 <span className="comment-date">
                   {new Date(c.created_at).toLocaleDateString("es-MX", {
                     day: "2-digit",
