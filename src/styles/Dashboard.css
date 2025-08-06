@@ -1,5 +1,5 @@
 .dashboard-main {
-  padding: 90px 30px 30px 30px; /* Asegura espacio debajo del navbar */
+  padding: 90px 30px 30px 30px; 
   background-color: #f5fdf5;
   min-height: 100vh;
   font-family: 'Segoe UI', sans-serif;
@@ -10,7 +10,7 @@
   font-weight: bold;
   font-size: 2.0rem;
   color: #2d5a2d;
-  margin: 20px 0 30px; /* arriba y abajo para espacio */
+  margin: 20px 0 30px; 
 }
 
 /* GRID de tarjetas */

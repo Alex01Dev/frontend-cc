@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "../api/axiosConfig"; // <- Tu configuración con token
+import axios from "../api/axiosConfig";
 import "../styles/Login.css";
 
 function Login() {

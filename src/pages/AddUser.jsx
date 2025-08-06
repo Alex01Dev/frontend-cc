@@ -7,7 +7,7 @@ function AddUser() {
     username: "",
     email: "",
     password: "",
-    status: "Active", // Valor por defecto válido
+    status: "Active", 
     image: null,
   });
 

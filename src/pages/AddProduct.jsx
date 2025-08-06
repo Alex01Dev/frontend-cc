@@ -14,7 +14,6 @@ function AddProduct() {
 
   const [mensaje, setMensaje] = useState("");
 
-  // ✅ Categorías extraídas del Enum CategoriaProducto (backend)
   const categorias = [
     "Alimentos",
     "Ropa",

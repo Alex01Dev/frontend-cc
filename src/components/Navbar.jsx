@@ -14,7 +14,7 @@ function Navbar() {
   const productDropdownRef = useRef(null);
   const userMenuDropdownRef = useRef(null);
 
-  const navigate = useNavigate(); // ✅ Se mantiene y ahora se usa correctamente
+  const navigate = useNavigate(); 
 
   const toggleUserDropdown = () => setShowUserDropdown(!showUserDropdown);
   const toggleProductDropdown = () => setShowProductDropdown(!showProductDropdown);
