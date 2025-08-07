@@ -10,7 +10,6 @@ import "../styles/Dashboard.css";
 function Dashboard() {
   const navigate = useNavigate();
 
-  // Estados nuevos
   const [topProducts, setTopProducts] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [consumoData, setConsumoData] = useState([]);

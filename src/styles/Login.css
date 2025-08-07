@@ -1,15 +1,17 @@
-/* Contenedor principal con posición relativa para contener fondo */
+/* Fondo general */
 .login-wrapper {
   position: relative;
   height: 100vh;
+  background: #eaf6ea;
+  font-family: 'Segoe UI', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: Arial, sans-serif;
   overflow: hidden;
+  z-index: 0;
 }
 
-/* Imagen de fondo con blur */
+/* Imagen de fondo desenfocada */
 .background-image {
   position: absolute;
   top: 0;
@@ -20,92 +22,132 @@
   background-size: cover;
   background-position: center;
   filter: blur(12px);
-  z-index: 0;
+  z-index: -1; 
 }
 
-/* Contenido principal encima del fondo */
+/* Tarjeta principal */
 .login-card {
-  position: relative;
-  z-index: 1;
   display: flex;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(46, 125, 50, 0.3);
-  overflow: hidden;
-  max-width: 800px;
+  max-width: 850px;
   width: 90%;
+  background-color: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  margin: 2rem auto;
+  z-index: 2;
 }
 
-/* Lado izquierdo imagen */
+/* Lado izquierdo: imagen/logo */
 .login-image {
-  flex: 1;
+  background-color: #f3f3f3;
+  padding: 2rem;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background-color: #c8e6c9;
+  justify-content: center;
 }
 
 .login-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 280px;
+  height: auto;
+  object-fit: contain;
 }
 
-/* Lado derecho formulario */
+/* Lado derecho: formulario */
 .login-form-container {
   flex: 1;
-  padding: 40px 30px;
+  padding: 2rem 2.5rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
 }
 
-.login-form {
-  width: 100%;
-  max-width: 300px;
-}
-
+/* Estilos del formulario */
 .login-form h2 {
+  margin-bottom: 1.5rem;
+  color: #2d5a2d;
   text-align: center;
-  margin-bottom: 20px;
-  color: #2e7d32;
 }
 
 .login-form label {
+  font-weight: 600;
+  margin-top: 1rem;
   display: block;
-  margin-bottom: 5px;
-  color: #2e7d32;
-  font-weight: bold;
 }
 
 .login-form input {
-  width: 100%;
   padding: 10px;
-  margin-bottom: 15px;
-  border: 2px solid #66bb6a;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.3s;
-}
-
-.login-form input:focus {
-  border-color: #2e7d32;
+  margin-top: 5px;
+  font-size: 1rem;
+  width: 100%;
 }
 
 .login-form button {
-  width: 100%;
+  margin-top: 1.5rem;
   padding: 10px;
-  background-color: #2e7d32;
+  background-color: #3b7d3b;
   color: white;
-  font-weight: bold;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .login-form button:hover {
-  background-color: #1b5e20;
+  background-color: #2d5a2d;
+}
+
+/* Sección de registro */
+.register-link {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.register-link p {
+  margin: 0;
+  font-weight: 500;
+  color: #444;
+}
+
+.register-btn {
+  display: inline-block;
+  margin-top: 5px;
+  color: #3b7d3b;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.register-btn:hover {
+  color: #2d5a2d;
+  text-decoration: underline;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+  .login-card {
+    flex-direction: column;
+    max-width: 95%;
+  }
+
+  .login-image {
+    padding: 1rem;
+    justify-content: center;
+  }
+
+  .login-image img {
+    max-width: 200px;
+  }
+
+  .login-form-container {
+    padding: 1.5rem;
+  }
+
+  .login-form h2 {
+    font-size: 1.4rem;
+  }
 }

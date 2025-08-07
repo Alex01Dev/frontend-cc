@@ -14,7 +14,9 @@ function Navbar() {
   const productDropdownRef = useRef(null);
   const userMenuDropdownRef = useRef(null);
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+  const isAuthenticated = !!localStorage.getItem("token");
 
   const toggleUserDropdown = () => setShowUserDropdown(!showUserDropdown);
   const toggleProductDropdown = () => setShowProductDropdown(!showProductDropdown);
@@ -23,7 +25,7 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuarioLogueado");
-    navigate("/login"); // ✅ navegación sin recargar la página
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -63,74 +65,85 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-left">
         <span className="logo">Consumo Consciente</span>
-        <ul className="navbar-menu">
-          <li><NavLink to="/dashboard">Dashboard</NavLink></li>
 
-          {/* Submenú Productos */}
-          <li
-            className="dropdown-toggle"
-            onClick={toggleProductDropdown}
-            ref={productDropdownRef}
-          >
-            <span>Productos <FaChevronDown className="dropdown-icon" /></span>
-            {showProductDropdown && (
-              <ul className="dropdown-menu">
-                <li><NavLink to="/products">Lista de productos</NavLink></li>
-                <li><NavLink to="/add-product">Añadir producto</NavLink></li>
-              </ul>
-            )}
-          </li>
+        {isAuthenticated && (
+          <ul className="navbar-menu">
+            <li><NavLink to="/dashboard">Dashboard</NavLink></li>
 
-          {/* Submenú Usuarios */}
-          <li
-            className="dropdown-toggle"
-            onClick={toggleUserMenuDropdown}
-            ref={userMenuDropdownRef}
-          >
-            <span>Usuarios <FaChevronDown className="dropdown-icon" /></span>
-            {showUserMenuDropdown && (
-              <ul className="dropdown-menu">
-                <li><NavLink to="/users">Lista de usuarios</NavLink></li>
-                <li><NavLink to="/add-user">Añadir usuario</NavLink></li>
-              </ul>
-            )}
-          </li>
+            <li
+              className="dropdown-toggle"
+              onClick={toggleProductDropdown}
+              ref={productDropdownRef}
+            >
+              <span>Productos <FaChevronDown className="dropdown-icon" /></span>
+              {showProductDropdown && (
+                <ul className="dropdown-menu">
+                  <li><NavLink to="/products">Lista de productos</NavLink></li>
+                  <li><NavLink to="/add-product">Añadir producto</NavLink></li>
+                </ul>
+              )}
+            </li>
 
-          <li><NavLink to="/recommendations">Recomendaciones</NavLink></li>
-          <li><NavLink to="/comments">Comentarios</NavLink></li>
-        </ul>
+            <li
+              className="dropdown-toggle"
+              onClick={toggleUserMenuDropdown}
+              ref={userMenuDropdownRef}
+            >
+              <span>Usuarios <FaChevronDown className="dropdown-icon" /></span>
+              {showUserMenuDropdown && (
+                <ul className="dropdown-menu">
+                  <li><NavLink to="/users">Lista de usuarios</NavLink></li>
+                  <li><NavLink to="/add-user">Añadir usuario</NavLink></li>
+                </ul>
+              )}
+            </li>
+
+            <li><NavLink to="/recommendations">Recomendaciones</NavLink></li>
+            <li><NavLink to="/comments">Comentarios</NavLink></li>
+          </ul>
+        )}
       </div>
 
-      <div className="userSection" onClick={toggleUserDropdown} ref={userDropdownRef}>
-        <img
-          src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-          alt="avatar"
-          className="avatar"
-        />
-        <FaChevronDown className="dropdown-icon" />
-
-        {showUserDropdown && (
-          <div className="dropdownMenu">
-            <div className="userInfo">
+      <div className="userSection" ref={userDropdownRef}>
+        {isAuthenticated ? (
+          <>
+            <div onClick={toggleUserDropdown}>
               <img
                 src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                alt="Foto perfil"
-                className="dropdownAvatar"
+                alt="avatar"
+                className="avatar"
               />
-              <div>
-                <p className="username">{user?.username}</p>
-                <p className="email">{user?.email}</p>
-              </div>
+              <FaChevronDown className="dropdown-icon" />
             </div>
 
-            <div className="dropdownActions">
-              <button className="dropdownItem" onClick={() => alert("Editar perfil próximamente")}>
-                Editar perfil
-              </button>
-              <button className="dropdownItem" onClick={handleLogout}>
-                Cerrar sesión
-              </button>
-            </div>
+            {showUserDropdown && (
+              <div className="dropdownMenu">
+                <div className="userInfo">
+                  <img
+                    src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                    alt="Foto perfil"
+                    className="dropdownAvatar"
+                  />
+                  <div>
+                    <p className="username">{user?.username}</p>
+                    <p className="email">{user?.email}</p>
+                  </div>
+                </div>
+
+                <div className="dropdownActions">
+                  <button className="dropdownItem" onClick={() => alert("Editar perfil próximamente")}>
+                    Editar perfil
+                  </button>
+                  <button className="dropdownItem" onClick={handleLogout}>
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="guestLinks">
+            <NavLink to="/login" className="nav-button">Iniciar sesión</NavLink>
           </div>
         )}
       </div>

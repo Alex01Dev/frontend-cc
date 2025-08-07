@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "../api/axiosConfig";
 import "../styles/Login.css";
 
@@ -25,7 +26,7 @@ function Login() {
     } catch (err) {
       setError("Usuario o contraseña incorrectos");
     }
-  };
+  }
 
   return (
     <div className="login-wrapper">
@@ -65,10 +66,15 @@ function Login() {
 
             <button type="submit">Entrar</button>
 
-            {error && (
-              <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
-            )}
+            {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
           </form>
+
+          <div className="register-link">
+            <p>¿No tienes una cuenta?</p>
+            <Link to="/add-user" className="register-btn">
+              Crear cuenta nueva
+            </Link>
+          </div>
         </div>
       </div>
     </div>
