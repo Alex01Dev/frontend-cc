@@ -55,7 +55,7 @@
   margin-left: 4px;
 }
 
-/* ============ Dropdown de PRODUCTOS */
+/* Dropdown de PRODUCTOS */
 .dropdown-toggle {
   position: relative;
   cursor: pointer;
@@ -96,7 +96,7 @@
   color: #2d5a2d;
 }
 
-/* ============ Dropdown de USUARIO ============ */
+/*  Dropdown de USUARIO */
 .userSection {
   display: flex;
   align-items: center;
@@ -163,7 +163,7 @@
 }
 
 .dropdownItem {
-  background-color: #f5f5f5;
+  background-color: #2e2c2c;
   border: none;
   padding: 8px 12px;
   border-radius: 6px;
@@ -173,7 +173,7 @@
 }
 
 .dropdownItem:hover {
-  background-color: #e0e0e0;
+  background-color: #7e7e7e;
 }
 
 @keyframes fadeIn {

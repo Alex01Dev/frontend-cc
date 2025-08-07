@@ -42,7 +42,7 @@ function Users() {
     const { name, value } = e.target;
     let val = value;
     if (name === "status") {
-      val = value === "true"; // convertir string a boolean
+      val = value === "true";
     }
     setForm({ ...form, [name]: val });
   };
@@ -143,43 +143,49 @@ function Users() {
         </tbody>
       </table>
 
+      {/* Modal de edición */}
       {editingUser && (
-        <form className="user-form" onSubmit={handleUpdate}>
-          <h3>Editar Usuario</h3>
-          <input
-            type="text"
-            name="username"
-            placeholder="Nombre de usuario"
-            value={form.username}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Correo electrónico"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <select name="status" value={form.status} onChange={handleChange}>
-            <option value={true}>Activo</option>
-            <option value={false}>Inactivo</option>
-          </select>
-          <input
-            type="text"
-            name="profile_image"
-            placeholder="URL de la foto de perfil"
-            value={form.profile_image}
-            onChange={handleChange}
-          />
-          <div className="form-buttons">
-            <button type="submit">Actualizar</button>
-            <button type="button" className="cancel" onClick={cancelEdit}>
-              Cancelar
-            </button>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="modal-close" onClick={cancelEdit}>✖</button>
+            <h3>Editar Usuario</h3>
+            <form className="edit-user-form" onSubmit={handleUpdate}>
+              <label>Nombre de usuario:</label>
+              <input
+                type="text"
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                required
+              />
+
+              <label>Correo electrónico:</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+
+              <label>Estatus:</label>
+              <select name="status" value={form.status} onChange={handleChange}>
+                <option value={true}>Activo</option>
+                <option value={false}>Inactivo</option>
+              </select>
+
+              <label>Foto de perfil (URL):</label>
+              <input
+                type="text"
+                name="profile_image"
+                value={form.profile_image}
+                onChange={handleChange}
+              />
+
+              <button type="submit" className="save-btn">Guardar cambios</button>
+            </form>
           </div>
-        </form>
+        </div>
       )}
     </main>
   );

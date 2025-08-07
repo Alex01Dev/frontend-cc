@@ -3,19 +3,20 @@ import { NavLink, useNavigate } from "react-router-dom";
 import axios from "../api/axiosConfig";
 import "../styles/Navbar.css";
 import { FaChevronDown } from "react-icons/fa";
+import EditProfileModal from "./EditProfileModal"; 
 
 function Navbar() {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [showUserMenuDropdown, setShowUserMenuDropdown] = useState(false);
   const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false); 
 
   const userDropdownRef = useRef(null);
   const productDropdownRef = useRef(null);
   const userMenuDropdownRef = useRef(null);
 
   const navigate = useNavigate();
-
   const isAuthenticated = !!localStorage.getItem("token");
 
   const toggleUserDropdown = () => setShowUserDropdown(!showUserDropdown);
@@ -26,6 +27,16 @@ function Navbar() {
     localStorage.removeItem("token");
     localStorage.removeItem("usuarioLogueado");
     navigate("/login");
+  };
+
+  const handleSaveProfile = async (updatedData) => {
+    try {
+      await axios.put(`/users/${user.id}`, updatedData);
+      setUser(updatedData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error al actualizar perfil:", error);
+    }
   };
 
   useEffect(() => {
@@ -62,92 +73,91 @@ function Navbar() {
   }, []);
 
   return (
-    <nav className="navbar">
-      <div className="navbar-left">
-        <span className="logo">Consumo Consciente</span>
+    <>
+      <nav className="navbar">
+        <div className="navbar-left">
+          <span className="logo">Consumo Consciente</span>
 
-        {isAuthenticated && (
-          <ul className="navbar-menu">
-            <li><NavLink to="/dashboard">Dashboard</NavLink></li>
+          {isAuthenticated && (
+            <ul className="navbar-menu">
+              <li><NavLink to="/dashboard">Dashboard</NavLink></li>
+              <li className="dropdown-toggle" onClick={toggleProductDropdown} ref={productDropdownRef}>
+                <span>Productos <FaChevronDown className="dropdown-icon" /></span>
+                {showProductDropdown && (
+                  <ul className="dropdown-menu">
+                    <li><NavLink to="/products">Lista de productos</NavLink></li>
+                    <li><NavLink to="/add-product">Añadir producto</NavLink></li>
+                  </ul>
+                )}
+              </li>
+              <li className="dropdown-toggle" onClick={toggleUserMenuDropdown} ref={userMenuDropdownRef}>
+                <span>Usuarios <FaChevronDown className="dropdown-icon" /></span>
+                {showUserMenuDropdown && (
+                  <ul className="dropdown-menu">
+                    <li><NavLink to="/users">Lista de usuarios</NavLink></li>
+                    <li><NavLink to="/add-user">Añadir usuario</NavLink></li>
+                  </ul>
+                )}
+              </li>
+              <li><NavLink to="/recommendations">Recomendaciones</NavLink></li>
+              <li><NavLink to="/comments">Comentarios</NavLink></li>
+            </ul>
+          )}
+        </div>
 
-            <li
-              className="dropdown-toggle"
-              onClick={toggleProductDropdown}
-              ref={productDropdownRef}
-            >
-              <span>Productos <FaChevronDown className="dropdown-icon" /></span>
-              {showProductDropdown && (
-                <ul className="dropdown-menu">
-                  <li><NavLink to="/products">Lista de productos</NavLink></li>
-                  <li><NavLink to="/add-product">Añadir producto</NavLink></li>
-                </ul>
-              )}
-            </li>
+        <div className="userSection" ref={userDropdownRef}>
+          {isAuthenticated ? (
+            <>
+              <div onClick={toggleUserDropdown}>
+                <img
+                  src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  alt="avatar"
+                  className="avatar"
+                />
+                <FaChevronDown className="dropdown-icon" />
+              </div>
 
-            <li
-              className="dropdown-toggle"
-              onClick={toggleUserMenuDropdown}
-              ref={userMenuDropdownRef}
-            >
-              <span>Usuarios <FaChevronDown className="dropdown-icon" /></span>
-              {showUserMenuDropdown && (
-                <ul className="dropdown-menu">
-                  <li><NavLink to="/users">Lista de usuarios</NavLink></li>
-                  <li><NavLink to="/add-user">Añadir usuario</NavLink></li>
-                </ul>
-              )}
-            </li>
+              {showUserDropdown && (
+                <div className="dropdownMenu">
+                  <div className="userInfo">
+                    <img
+                      src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                      alt="Foto perfil"
+                      className="dropdownAvatar"
+                    />
+                    <div>
+                      <p className="username">{user?.username}</p>
+                      <p className="email">{user?.email}</p>
+                    </div>
+                  </div>
 
-            <li><NavLink to="/recommendations">Recomendaciones</NavLink></li>
-            <li><NavLink to="/comments">Comentarios</NavLink></li>
-          </ul>
-        )}
-      </div>
-
-      <div className="userSection" ref={userDropdownRef}>
-        {isAuthenticated ? (
-          <>
-            <div onClick={toggleUserDropdown}>
-              <img
-                src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                alt="avatar"
-                className="avatar"
-              />
-              <FaChevronDown className="dropdown-icon" />
-            </div>
-
-            {showUserDropdown && (
-              <div className="dropdownMenu">
-                <div className="userInfo">
-                  <img
-                    src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                    alt="Foto perfil"
-                    className="dropdownAvatar"
-                  />
-                  <div>
-                    <p className="username">{user?.username}</p>
-                    <p className="email">{user?.email}</p>
+                  <div className="dropdownActions">
+                    <button className="dropdownItem" onClick={() => setIsEditing(true)}>
+                      Editar perfil
+                    </button>
+                    <button className="dropdownItem" onClick={handleLogout}>
+                      Cerrar sesión
+                    </button>
                   </div>
                 </div>
+              )}
+            </>
+          ) : (
+            <div className="guestLinks">
+              <NavLink to="/login" className="nav-button">Iniciar sesión</NavLink>
+            </div>
+          )}
+        </div>
+      </nav>
 
-                <div className="dropdownActions">
-                  <button className="dropdownItem" onClick={() => alert("Editar perfil próximamente")}>
-                    Editar perfil
-                  </button>
-                  <button className="dropdownItem" onClick={handleLogout}>
-                    Cerrar sesión
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="guestLinks">
-            <NavLink to="/login" className="nav-button">Iniciar sesión</NavLink>
-          </div>
-        )}
-      </div>
-    </nav>
+      {/* Modal de edición */}
+      <EditProfileModal
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        userData={user}
+        onSave={handleSaveProfile}
+      />
+    </>
   );
 }
 
