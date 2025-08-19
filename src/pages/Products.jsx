@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "../api/axiosConfig";
 import ProductForm from "../components/ProductForm";
 import "../styles/Products.css";
@@ -10,22 +11,18 @@ function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
-
-  // Modal genérico para mensajes
   const [alertModal, setAlertModal] = useState({ open: false, message: "" });
-
-  //  Cantidad seleccionada (para carrito/compra)
   const [cantidades, setCantidades] = useState({});
-
-  // actualizar cantidad de un producto
-  const handleCantidadChange = (id, value) => {
-    setCantidades((prev) => ({ ...prev, [id]: value }));
-};
 
   const role = localStorage.getItem("role"); // "admin" | "user"
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
-  // ✅ useCallback para evitar warnings
+  const handleCantidadChange = (id, value) => {
+    setCantidades((prev) => ({ ...prev, [id]: value }));
+  };
+
+  // Obtener productos
   const fetchProducts = useCallback(async () => {
     try {
       const res = await axios.get("/products/get", {
@@ -39,8 +36,9 @@ function Products() {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]); 
+  }, [fetchProducts]);
 
+  // Eliminar producto (admin)
   const eliminarProducto = async (id) => {
     if (!window.confirm("¿Eliminar este producto?")) return;
     try {
@@ -54,54 +52,72 @@ function Products() {
     }
   };
 
+  // Editar producto (admin)
   const handleEdit = (producto) => {
     setProductToEdit(producto);
     setShowModal(true);
   };
 
-  // Comprar directo
-const comprarAhora = async (prod) => {
-  try {
-    const res = await axios.post(
-      "/transactions/buy",
-      { product_id: prod.id, quantity: cantidades[prod.id] || 1 },  // ✅ ahora usa el valor correcto
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setAlertModal({
-      open: true,
-      message: res.data.message || "✅ Has comprado este producto.",
-    });
-    fetchProducts(); // refrescar stock
-  } catch (err) {
-    setAlertModal({
-      open: true,
-      message: err.response?.data?.detail || "❌ Error al comprar producto",
-    });
-  }
-};
-// Agregar al carrito
-const agregarAlCarrito = async (prod) => {
-  try {
-    const res = await axios.post(
-      "/cart/add",
-      { product_id: prod.id, quantity: cantidades[prod.id] || 1 }, 
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    console.log("Carrito ->", res.data);
-    setAlertModal({
-      open: true,
-      message: `✅ ${prod.name} agregado al carrito (x${cantidades[prod.id] || 1})`,
-    });
-  } catch (err) {
-    console.error("❌ Error al agregar al carrito:", err.response?.data);
-    setAlertModal({
-      open: true,
-      message:
-        err.response?.data?.detail ||
-        "❌ Error al agregar al carrito",
-    });
-  }
-};
+  // Comprar ahora
+  const comprarAhora = async (prod) => {
+    try {
+      const res = await axios.post(
+        "/transactions/buy",
+        { product_id: prod.id, quantity: cantidades[prod.id] || 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAlertModal({
+        open: true,
+        message: res.data.message || "✅ Has comprado este producto.",
+      });
+      fetchProducts();
+    } catch (err) {
+      setAlertModal({
+        open: true,
+        message: err.response?.data?.detail || "❌ Error al comprar producto",
+      });
+    }
+  };
+
+  // Agregar al carrito
+  const agregarAlCarrito = async (prod) => {
+    try {
+      await axios.post(
+        "/cart/add",
+        { product_id: prod.id, quantity: cantidades[prod.id] || 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAlertModal({
+        open: true,
+        message: `✅ ${prod.name} agregado al carrito (x${cantidades[prod.id] || 1})`,
+      });
+    } catch (err) {
+      setAlertModal({
+        open: true,
+        message: err.response?.data?.detail || "❌ Error al agregar al carrito",
+      });
+    }
+  };
+
+  // Registrar interacción y navegar a comentarios
+  const handleProductClick = async (prod) => {
+    try {
+      await axios.post(
+        "/interacciones",
+        { product_id: prod.id, action: "click" }, // Ajusta según tu schema InteractionCreate
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Error al registrar interacción:", err);
+      setAlertModal({
+        open: true,
+        message: "❌ Error al registrar la interacción",
+      });
+    } finally {
+      // Navegar a comentarios aunque falle la interacción
+      navigate(`/comments?product=${prod.id}`);
+    }
+  };
 
   const filteredProducts = products.filter((p) => {
     const matchesName = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -139,7 +155,12 @@ const agregarAlCarrito = async (prod) => {
 
       <div className="product-grid">
         {filteredProducts.map((prod) => (
-          <div key={prod.id} className="product-card">
+          <div
+            key={prod.id}
+            className="product-card"
+            onClick={() => handleProductClick(prod)}
+            style={{ cursor: "pointer" }}
+          >
             <img src={prod.image_url} alt={prod.name} />
             <div className="product-info">
               <h3>{prod.name}</h3>
@@ -153,10 +174,14 @@ const agregarAlCarrito = async (prod) => {
 
               {role === "admin" ? (
                 <div className="product-actions">
-                  <button onClick={() => handleEdit(prod)}>Editar</button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEdit(prod); }}
+                  >
+                    Editar
+                  </button>
                   <button
                     className="delete"
-                    onClick={() => eliminarProducto(prod.id)}
+                    onClick={(e) => { e.stopPropagation(); eliminarProducto(prod.id); }}
                   >
                     Eliminar
                   </button>
@@ -165,18 +190,24 @@ const agregarAlCarrito = async (prod) => {
                 <div className="product-actions">
                   <label>
                     Cantidad:
-                  <input
-                    type="number"
-                    min="1"
-                    max={prod.quantity}
-                    value={cantidades[prod.id] || 1}
-                    onChange={(e) => handleCantidadChange(prod.id, Number(e.target.value))}
-                  />
+                    <input
+                      type="number"
+                      min="1"
+                      max={prod.quantity}
+                      value={cantidades[prod.id] || 1}
+                      onChange={(e) => { e.stopPropagation(); handleCantidadChange(prod.id, Number(e.target.value)); }}
+                    />
                   </label>
-                  <button className="btn-comprar" onClick={() => comprarAhora(prod)}>
+                  <button
+                    className="btn-comprar"
+                    onClick={(e) => { e.stopPropagation(); comprarAhora(prod); }}
+                  >
                     Comprar ahora
                   </button>
-                  <button className="btn-carrito" onClick={() => agregarAlCarrito(prod)}>
+                  <button
+                    className="btn-carrito"
+                    onClick={(e) => { e.stopPropagation(); agregarAlCarrito(prod); }}
+                  >
                     Agregar al carrito 🛒
                   </button>
                 </div>
@@ -198,7 +229,6 @@ const agregarAlCarrito = async (prod) => {
         />
       )}
 
-      {/* Modal genérico */}
       {alertModal.open && (
         <div className="modal-overlay" onClick={() => setAlertModal({ open: false, message: "" })}>
           <div className="modal-content">

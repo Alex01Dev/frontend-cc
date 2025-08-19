@@ -128,3 +128,109 @@
   .comments-main { padding: 84px 16px 24px; }
   .comments-header { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
+
+/* Contenedor de agregar comentario */
+.add-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* Textarea para escribir comentario */
+.add-comment textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid #cfe8cf;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  color: #1f2d1f;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.add-comment textarea:focus {
+  border-color: #3b7d3b;
+  box-shadow: 0 2px 6px rgba(59, 125, 59, 0.25);
+}
+
+/* Contenedor de agregar comentario */
+.add-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  max-width: 700px;       /* Limita ancho para que no se salga */
+  width: 100%;
+}
+
+/* Textarea para escribir comentario */
+.add-comment textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid #cfe8cf;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  color: #1f2d1f;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box; /* Evita que se salga del contenedor */
+}
+.add-comment textarea:focus {
+  border-color: #3b7d3b;
+  box-shadow: 0 2px 6px rgba(59, 125, 59, 0.25);
+}
+
+/* Botón de enviar comentario */
+.add-comment button {
+  align-self: flex-end;
+  background: #3b7d3b;
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 125, 59, 0.25);
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+.add-comment button:hover {
+  filter: brightness(1.05);
+}
+.add-comment button:disabled {
+  background: #a3c2a3;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Contenedor flexible para textarea + botón si quieres en una sola fila */
+.add-comment-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .add-comment {
+    padding: 12px;
+  }
+  .add-comment button {
+    width: 100%; /* Botón ocupa toda la fila en móvil */
+  }
+}

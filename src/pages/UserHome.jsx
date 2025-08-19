@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axiosConfig";
 import "../styles/UserHome.css";
 
@@ -7,13 +7,11 @@ export default function UserHome() {
   const navigate = useNavigate();
   const username = localStorage.getItem("usuarioLogueado") || "usuario";
 
-  // Estado de datos
   const [products, setProducts] = useState([]);
-  const [topViewed, setTopViewed] = useState([]); 
-  const [recs, setRecs] = useState([]); 
+  const [topViewed, setTopViewed] = useState([]);
+  const [recs, setRecs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Refs para carruseles
   const refFeatured = useRef(null);
   const refRecs = useRef(null);
 
@@ -25,18 +23,16 @@ export default function UserHome() {
       try {
         const [prodRes, topRes] = await Promise.all([
           api.get("/products/get"),
-          api.get("/stats/productos-mas-vistos").catch(() => ({ data: [] })), // por si no está disponible
+          api.get("/stats/productos-mas-vistos").catch(() => ({ data: [] })),
         ]);
 
         if (!mounted) return;
         setProducts(prodRes.data || []);
         setTopViewed(topRes.data || []);
 
-        // Recomendaciones (si tu endpoint devuelve .recomendaciones = [ids])
         try {
           const recRes = await api.get("/modelo/entrenar");
           const ids = recRes?.data?.recomendaciones || [];
-          // mapea ids a productos existentes si ya los tienes
           const mapped =
             ids.length && prodRes.data?.length
               ? prodRes.data.filter((p) => ids.includes(p.id))
@@ -55,17 +51,29 @@ export default function UserHome() {
     };
   }, []);
 
-  // Helpers carrusel
   const scrollByAmount = (ref, dir = 1) => {
     if (!ref.current) return;
     const itemWidth = ref.current.firstChild?.getBoundingClientRect()?.width || 280;
     ref.current.scrollBy({ left: dir * (itemWidth + 16), behavior: "smooth" });
   };
 
-  // Derivados
-  const featured = products.slice(0, 12); // destacados simples
-  const recommended = recs.length ? recs : products.slice(12, 24); // fallback si no hay recs
+  const featured = products.slice(0, 12);
+  const recommended = recs.length ? recs : products.slice(12, 24);
 
+  // Click en producto: registrar interacción y navegar a comentarios
+  const handleProductClick = async (prod) => {
+    try {
+      await api.post(
+        "/interacciones",
+        { product_id: prod.id, action: "click" },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+    } catch (err) {
+      console.error("Error registrando interacción:", err);
+    } finally {
+      navigate(`/comments?product=${prod.id}`);
+    }
+  };
 
   return (
     <main className="userhome">
@@ -98,6 +106,8 @@ export default function UserHome() {
             alt="Consumo responsable"
             loading="lazy"
           />
+
+          {/* Estadísticas */}
           <div className="uh-stats">
             <div className="uh-stat">
               <span className="uh-stat__num">{products.length}</span>
@@ -113,9 +123,7 @@ export default function UserHome() {
         </div>
       </section>
 
-
-
-      {/* CARRUSEL: PRODUCTOS DESTACADOS */}
+      {/* PRODUCTOS DESTACADOS */}
       <section className="uh-section">
         <div className="uh-section__header">
           <h2>Productos destacados</h2>
@@ -154,11 +162,12 @@ export default function UserHome() {
         ) : (
           <div className="uh-carousel" ref={refFeatured}>
             {featured.map((p) => (
-              <Link
-                to="/products"
-                className="uh-card"
+              <div
                 key={p.id}
+                className="uh-card"
                 title={p.name}
+                onClick={() => handleProductClick(p)}
+                style={{ cursor: "pointer" }}
               >
                 <div className="uh-card__image">
                   <img
@@ -174,13 +183,13 @@ export default function UserHome() {
                     {p.category} · CO₂ {p.carbon_footprint} kg
                   </p>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
       </section>
 
-      {/* CARRUSEL: RECOMENDADOS PARA TI */}
+      {/* RECOMENDADOS */}
       <section className="uh-section">
         <div className="uh-section__header">
           <h2>Recomendados para ti</h2>
@@ -221,11 +230,12 @@ export default function UserHome() {
         ) : (
           <div className="uh-carousel" ref={refRecs}>
             {recommended.map((p) => (
-              <Link
-                to="/products"
-                className="uh-card"
+              <div
                 key={`rec-${p.id}`}
+                className="uh-card"
                 title={p.name}
+                onClick={() => handleProductClick(p)}
+                style={{ cursor: "pointer" }}
               >
                 <div className="uh-card__image">
                   <img
@@ -241,14 +251,13 @@ export default function UserHome() {
                     {p.category} · {p.recyclable_packaging ? "Reciclable" : "Convencional"}
                   </p>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
       </section>
 
-
-      {/* INFO */}
+      {/* CONSEJOS RÁPIDOS */}
       <section className="uh-info">
         <h2>Consejos rápidos</h2>
         <ul>
