@@ -1,103 +1,175 @@
+/* --- Fondo de la página con gradiente --- */
 .add-product-page {
-  min-height: 100vh;
-  background-color: #f1fff3;
-  padding-top: 100px;
+  min-height: 50vh;
+  background: linear-gradient(135deg, #e8f5e9, #d0f0d9, #c8e6c9);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  padding: 40px 20px;
+  font-family: "Poppins", "Segoe UI", sans-serif;
 }
 
+/* --- Contenedor glassmorphism --- */
 .add-product-container {
-  max-width: 550px;
-  width: 100%;
-  background-color: #ffffff;
-  padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', sans-serif;
-  margin-bottom: 60px;
+  width: 80%;
+  max-width: 800px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1rem 2.5rem;
+  border-radius: 25px;
+  backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.6s ease;
+  border: 1px solid rgba(200, 230, 201, 0.5);
+  position: relative;
+  top: 25px;
 }
 
+/* --- Título --- */
 .add-product-container h2 {
   text-align: center;
-  color: #2d5a2d;
+  font-size: 2rem;
+  color: #1b4d2b;
   margin-bottom: 2rem;
-  font-size: 1.75rem;
+  text-transform: uppercase;
 }
 
+/* --- Grid de dos columnas --- */
 .product-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2rem;
 }
 
+/* --- Labels --- */
 .product-form label {
   font-weight: 600;
-  color: #333;
-  margin-bottom: 0.3rem;
+  color: #2d2d2d;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 6px;
 }
 
+/* --- Inputs y selects --- */
 .product-form input,
 .product-form select {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  background: #f8fdf9;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.08),
+              inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+  transition: all 0.25s ease;
 }
 
 .product-form input:focus,
 .product-form select:focus {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+  transform: scale(1.01);
   outline: none;
-  border-color: #3b7d3b;
 }
 
+/* --- Checkboxes ocupan ancho completo --- */
 .checkbox-group {
+  grid-column: span 2;
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  justify-content: space-evenly;
+  gap: 2rem;
+  padding: 0.8rem 1rem;
+  background: #f9fdf9;
+  border-radius: 14px;
+  box-shadow: inset 1px 1px 5px rgba(0,0,0,0.06),
+              inset -1px -1px 5px rgba(255,255,255,0.8);
 }
 
 .checkbox-group label {
+  font-weight: 500;
+  color: #333;
   display: flex;
   align-items: center;
-  font-weight: 500;
-  color: #444;
-  gap: 0.5rem;
-}
-
-.product-form button {
-  background-color: #3b7d3b;
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
+  gap: 0.6rem;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
 }
 
-.product-form button:hover {
-  background-color: #2d5a2d;
-}
-
-.mensaje {
-  margin-top: 1rem;
+/* --- Input de imagen --- */
+.product-form input[type="file"] {
+  grid-column: span 2;
+  padding: 16px;
+  border: 2px dashed #b5cdb5;
+  border-radius: 14px;
+  background: #f5faf6;
+  cursor: pointer;
   text-align: center;
   font-weight: 600;
-  color: #3b7d3b;
+  color: #666;
+  transition: all 0.3s ease;
 }
 
+.product-form input[type="file"]:hover {
+  border-color: #4caf50;
+  background: #f0fff5;
+}
+
+/* --- Vista previa imagen --- */
 .image-preview {
+  grid-column: span 2;
   text-align: center;
   margin-top: 1rem;
 }
 
 .image-preview img {
-  max-width: 100%;
-  max-height: 250px;
-  border-radius: 12px;
+  max-width: 260px;
+  max-height: 200px;
+  border-radius: 16px;
   object-fit: cover;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Botón guardar centrado en toda la fila --- */
+.product-form button {
+  grid-column: span 2;
+  padding: 14px;
+  background: linear-gradient(135deg, #4caf50, #2d5a2d);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.product-form button:hover {
+  background: linear-gradient(135deg, #2d5a2d, #1f3d1f);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 9px 8px rgba(59, 125, 59, 0.4);
+}
+
+/* --- Mensaje --- */
+.mensaje {
+  grid-column: span 2;
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: #2e7d32;
+  background: #ecfdf3;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+/* --- Animación --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .product-form {
+    grid-template-columns: 1fr;
+  }
 }

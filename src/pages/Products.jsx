@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "../api/axiosConfig";
 import ProductForm from "../components/ProductForm";
 import "../styles/Products.css";
@@ -11,23 +11,37 @@ function Products() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  const fetchProducts = async () => {
+  // Modal genérico para mensajes
+  const [alertModal, setAlertModal] = useState({ open: false, message: "" });
+
+  //  Cantidad seleccionada (para carrito/compra)
+  const [cantidad, setCantidad] = useState(1);
+
+  const role = localStorage.getItem("role"); // "admin" | "user"
+  const token = localStorage.getItem("token");
+
+  // ✅ useCallback para evitar warnings
+  const fetchProducts = useCallback(async () => {
     try {
-      const res = await axios.get("/products/get");
+      const res = await axios.get("/products/get", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProducts(res.data);
     } catch (err) {
       setMensaje("Error al obtener productos.");
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]); 
 
   const eliminarProducto = async (id) => {
     if (!window.confirm("¿Eliminar este producto?")) return;
     try {
-      await axios.delete(`/products/${id}`);
+      await axios.delete(`/products/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMensaje("Producto eliminado.");
       fetchProducts();
     } catch {
@@ -39,6 +53,50 @@ function Products() {
     setProductToEdit(producto);
     setShowModal(true);
   };
+
+  // Comprar directo
+  const comprarAhora = async (prod) => {
+    try {
+      const res = await axios.post(
+        "/transactions/buy",
+        { product_id: prod.id, quantity: cantidad },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAlertModal({
+        open: true,
+        message: res.data.message || "✅ Has comprado este producto.",
+      });
+    } catch (err) {
+      setAlertModal({
+        open: true,
+        message: err.response?.data?.detail || "❌ Error al comprar producto",
+      });
+    }
+  };
+
+  // Agregar al carrito
+const agregarAlCarrito = async (prod) => {
+  try {
+    const res = await axios.post(
+      "/cart/add",
+      { product_id: prod.id, quantity: cantidad },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log("Carrito ->", res.data);
+    setAlertModal({
+      open: true,
+      message: `✅ ${prod.name} agregado al carrito (x${cantidad})`,
+    });
+  } catch (err) {
+    console.error("❌ Error al agregar al carrito:", err.response?.data);
+    setAlertModal({
+      open: true,
+      message:
+        err.response?.data?.detail ||
+        "❌ Error al agregar al carrito",
+    });
+  }
+};
 
   const filteredProducts = products.filter((p) => {
     const matchesName = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -81,19 +139,49 @@ function Products() {
             <div className="product-info">
               <h3>{prod.name}</h3>
               <p>Categoría: <strong>{prod.category}</strong></p>
+              <p>Precio: <strong>${prod.price}</strong></p>
+              <p>Estado: <strong>{prod.status}</strong></p>
+              <p>Stock: <strong>{prod.quantity}</strong></p>
               <p>Huella CO₂: <strong>{prod.carbon_footprint} kg</strong></p>
               <p>Reciclable: {prod.recyclable_packaging ? "Sí ♻️" : "No"}</p>
               <p>Origen local: {prod.local_origin ? "Sí 🏡" : "No"}</p>
-              <div className="product-actions">
-                <button onClick={() => handleEdit(prod)}>Editar</button>
-                <button className="delete" onClick={() => eliminarProducto(prod.id)}>Eliminar</button>
-              </div>
+
+              {role === "admin" ? (
+                <div className="product-actions">
+                  <button onClick={() => handleEdit(prod)}>Editar</button>
+                  <button
+                    className="delete"
+                    onClick={() => eliminarProducto(prod.id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ) : (
+                <div className="product-actions">
+                  <label>
+                    Cantidad:
+                    <input
+                      type="number"
+                      min="1"
+                      max={prod.quantity}
+                      value={cantidad}
+                      onChange={(e) => setCantidad(Number(e.target.value))}
+                    />
+                  </label>
+                  <button className="btn-comprar" onClick={() => comprarAhora(prod)}>
+                    Comprar ahora
+                  </button>
+                  <button className="btn-carrito" onClick={() => agregarAlCarrito(prod)}>
+                    Agregar al carrito 🛒
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      {showModal && (
+      {showModal && role === "admin" && (
         <ProductForm
           product={productToEdit}
           onClose={() => setShowModal(false)}
@@ -103,6 +191,16 @@ function Products() {
             setProductToEdit(null);
           }}
         />
+      )}
+
+      {/* Modal genérico */}
+      {alertModal.open && (
+        <div className="modal-overlay" onClick={() => setAlertModal({ open: false, message: "" })}>
+          <div className="modal-content">
+            <p>{alertModal.message}</p>
+            <button onClick={() => setAlertModal({ open: false, message: "" })}>Cerrar</button>
+          </div>
+        </div>
       )}
     </main>
   );

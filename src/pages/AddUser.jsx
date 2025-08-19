@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "../api/axiosConfig";
 import "../styles/AddUser.css";
 
@@ -11,14 +11,19 @@ function AddUser() {
     image: null,
   });
 
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [mensaje, setMensaje] = useState("");
+  const fileInputRef = useRef(null); 
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    setForm({
-      ...form,
-      [name]: type === "file" ? files[0] : value,
-    });
+    if (type === "file") {
+      const file = files[0];
+      setForm({ ...form, image: file });
+      setPreviewUrl(file ? URL.createObjectURL(file) : null);
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -42,7 +47,9 @@ function AddUser() {
         },
       });
 
-      setMensaje("Usuario registrado correctamente.");
+      setMensaje("✅ Usuario registrado correctamente.");
+      
+      // Resetear formulario
       setForm({
         username: "",
         email: "",
@@ -50,8 +57,15 @@ function AddUser() {
         status: "Active",
         image: null,
       });
+      setPreviewUrl(null);
+
+      // Resetear input file manualmente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
     } catch (error) {
-      setMensaje("Error al registrar el usuario.");
+      setMensaje("❌ Error al registrar el usuario.");
       console.error(error);
     }
   };
@@ -62,51 +76,69 @@ function AddUser() {
         <h2>Registrar nuevo usuario</h2>
 
         <form onSubmit={handleSubmit} className="add-user-form">
-          <label>Nombre de usuario:</label>
-          <input
-            type="text"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-          />
+          <div>
+            <label>Nombre de usuario:</label>
+            <input
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <label>Correo electrónico:</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+          <div>
+            <label>Correo electrónico:</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <label>Contraseña:</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
+          <div>
+            <label>Contraseña:</label>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <label>Estado:</label>
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            required
-          >
-            <option value="Active">Activo</option>
-            <option value="Inactive">Inactivo</option>
-          </select>
+          <div>
+            <label>Estado:</label>
+            <select
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              required
+            >
+              <option value="Active">Activo</option>
+              <option value="Inactive">Inactivo</option>
+            </select>
+          </div>
 
-          <label>Foto de perfil:</label>
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleChange}
-          />
+          <div className="file-input-wrapper">
+            <label>Foto de perfil:</label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={handleChange}
+              ref={fileInputRef} 
+            />
+          </div>
+
+          {previewUrl && (
+            <div className="image-preview">
+              <p>Vista previa:</p>
+              <img src={previewUrl} alt="Vista previa perfil" />
+            </div>
+          )}
 
           <button type="submit">Registrar</button>
         </form>

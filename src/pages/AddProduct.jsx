@@ -4,15 +4,17 @@ import "../styles/AddProduct.css";
 
 function AddProduct() {
   const [form, setForm] = useState({
-    nombre: "",
-    categoria: "",
-    huella_co2: "",
-    reciclable: false,
-    origen_local: false,
-    imagen: null,
+    name: "",
+    category: "",
+    price: "",
+    quantity: "",
+    carbon_footprint: "",
+    recyclable_packaging: false,
+    local_origin: false,
+    image: null,
   });
 
-  const [previewUrl, setPreviewUrl] = useState(null); 
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [mensaje, setMensaje] = useState("");
 
   const categorias = [
@@ -32,14 +34,8 @@ function AddProduct() {
       setForm({ ...form, [name]: checked });
     } else if (type === "file") {
       const file = files[0];
-      setForm({ ...form, imagen: file });
-
-      if (file) {
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-      } else {
-        setPreviewUrl(null);
-      }
+      setForm({ ...form, image: file });
+      setPreviewUrl(file ? URL.createObjectURL(file) : null);
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -49,13 +45,15 @@ function AddProduct() {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("name", form.nombre);
-    formData.append("category", form.categoria);
-    formData.append("carbon_footprint", form.huella_co2);
-    formData.append("recyclable_packaging", form.reciclable);
-    formData.append("local_origin", form.origen_local);
-    if (form.imagen) {
-      formData.append("image", form.imagen);
+    formData.append("name", form.name);
+    formData.append("category", form.category);
+    formData.append("price", form.price);
+    formData.append("quantity", form.quantity);
+    formData.append("carbon_footprint", form.carbon_footprint);
+    formData.append("recyclable_packaging", form.recyclable_packaging);
+    formData.append("local_origin", form.local_origin);
+    if (form.image) {
+      formData.append("image", form.image);
     }
 
     try {
@@ -70,16 +68,18 @@ function AddProduct() {
 
       setMensaje("✅ Producto añadido correctamente.");
       setForm({
-        nombre: "",
-        categoria: "",
-        huella_co2: "",
-        reciclable: false,
-        origen_local: false,
-        imagen: null,
+        name: "",
+        category: "",
+        price: "",
+        quantity: "",
+        carbon_footprint: "",
+        recyclable_packaging: false,
+        local_origin: false,
+        image: null,
       });
       setPreviewUrl(null);
     } catch (error) {
-      console.error("❌ Error al añadir producto:", error);
+      console.error("❌ Error al añadir producto:", error.response?.data || error);
       setMensaje("❌ Error al añadir producto.");
     }
   };
@@ -92,16 +92,16 @@ function AddProduct() {
           <label>Nombre:</label>
           <input
             type="text"
-            name="nombre"
-            value={form.nombre}
+            name="name"
+            value={form.name}
             onChange={handleChange}
             required
           />
 
           <label>Categoría:</label>
           <select
-            name="categoria"
-            value={form.categoria}
+            name="category"
+            value={form.category}
             onChange={handleChange}
             required
           >
@@ -113,11 +113,31 @@ function AddProduct() {
             ))}
           </select>
 
+          <label>Precio:</label>
+          <input
+            type="number"
+            name="price"
+            value={form.price}
+            onChange={handleChange}
+            step="0.01"
+            required
+          />
+
+          <label>Cantidad:</label>
+          <input
+            type="number"
+            name="quantity"
+            value={form.quantity}
+            onChange={handleChange}
+            min="1"
+            required
+          />
+
           <label>Huella CO₂ (kg):</label>
           <input
             type="number"
-            name="huella_co2"
-            value={form.huella_co2}
+            name="carbon_footprint"
+            value={form.carbon_footprint}
             onChange={handleChange}
             step="0.01"
             required
@@ -127,18 +147,18 @@ function AddProduct() {
             <label>
               <input
                 type="checkbox"
-                name="reciclable"
-                checked={form.reciclable}
+                name="recyclable_packaging"
+                checked={form.recyclable_packaging}
                 onChange={handleChange}
               />
-              Reciclable
+              Empaque reciclable
             </label>
 
             <label>
               <input
                 type="checkbox"
-                name="origen_local"
-                checked={form.origen_local}
+                name="local_origin"
+                checked={form.local_origin}
                 onChange={handleChange}
               />
               Origen local
@@ -148,7 +168,7 @@ function AddProduct() {
           <label>Imagen:</label>
           <input
             type="file"
-            name="imagen"
+            name="image"
             accept="image/*"
             onChange={handleChange}
           />

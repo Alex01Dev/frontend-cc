@@ -2,15 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "../api/axiosConfig";
 import "../styles/Navbar.css";
-import { FaChevronDown } from "react-icons/fa";
-import EditProfileModal from "./EditProfileModal"; 
+import { FaChevronDown, FaShoppingCart } from "react-icons/fa";
+import EditProfileModal from "./EditProfileModal";
 
 function Navbar() {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [showUserMenuDropdown, setShowUserMenuDropdown] = useState(false);
   const [user, setUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); 
+  const [isEditing, setIsEditing] = useState(false);
 
   const userDropdownRef = useRef(null);
   const productDropdownRef = useRef(null);
@@ -18,21 +18,25 @@ function Navbar() {
 
   const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem("token");
+  const role = localStorage.getItem("role"); // "admin" | "user"
 
   const toggleUserDropdown = () => setShowUserDropdown(!showUserDropdown);
-  const toggleProductDropdown = () => setShowProductDropdown(!showProductDropdown);
-  const toggleUserMenuDropdown = () => setShowUserMenuDropdown(!showUserMenuDropdown);
+  const toggleProductDropdown = () =>
+    setShowProductDropdown(!showProductDropdown);
+  const toggleUserMenuDropdown = () =>
+    setShowUserMenuDropdown(!showUserMenuDropdown);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuarioLogueado");
+    localStorage.removeItem("role");
     navigate("/login");
   };
 
   const handleSaveProfile = async (updatedData) => {
     try {
       await axios.put(`/users/${user.id}`, updatedData);
-      setUser(updatedData);
+      setUser({ ...user, ...updatedData });
       setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar perfil:", error);
@@ -57,13 +61,22 @@ function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target)
+      ) {
         setShowUserDropdown(false);
       }
-      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target)) {
+      if (
+        productDropdownRef.current &&
+        !productDropdownRef.current.contains(event.target)
+      ) {
         setShowProductDropdown(false);
       }
-      if (userMenuDropdownRef.current && !userMenuDropdownRef.current.contains(event.target)) {
+      if (
+        userMenuDropdownRef.current &&
+        !userMenuDropdownRef.current.contains(event.target)
+      ) {
         setShowUserMenuDropdown(false);
       }
     };
@@ -80,27 +93,71 @@ function Navbar() {
 
           {isAuthenticated && (
             <ul className="navbar-menu">
-              <li><NavLink to="/dashboard">Dashboard</NavLink></li>
-              <li className="dropdown-toggle" onClick={toggleProductDropdown} ref={productDropdownRef}>
-                <span>Productos <FaChevronDown className="dropdown-icon" /></span>
+              <li>
+                <NavLink to={role === "admin" ? "/dashboard" : "/user-home"}>
+                  {role === "admin" ? "Dashboard" : "Inicio"}
+                </NavLink>
+              </li>
+
+              <li
+                className="dropdown-toggle"
+                onClick={toggleProductDropdown}
+                ref={productDropdownRef}
+              >
+                <span>
+                  Productos <FaChevronDown className="dropdown-icon" />
+                </span>
                 {showProductDropdown && (
                   <ul className="dropdown-menu">
-                    <li><NavLink to="/products">Lista de productos</NavLink></li>
-                    <li><NavLink to="/add-product">Añadir producto</NavLink></li>
+                    <li>
+                      <NavLink to="/products">Lista de productos</NavLink>
+                    </li>
+                    {role === "admin" && (
+                      <li>
+                        <NavLink to="/add-product">Añadir producto</NavLink>
+                      </li>
+                    )}
                   </ul>
                 )}
               </li>
-              <li className="dropdown-toggle" onClick={toggleUserMenuDropdown} ref={userMenuDropdownRef}>
-                <span>Usuarios <FaChevronDown className="dropdown-icon" /></span>
-                {showUserMenuDropdown && (
-                  <ul className="dropdown-menu">
-                    <li><NavLink to="/users">Lista de usuarios</NavLink></li>
-                    <li><NavLink to="/add-user">Añadir usuario</NavLink></li>
-                  </ul>
-                )}
+
+              {role === "admin" && (
+                <li
+                  className="dropdown-toggle"
+                  onClick={toggleUserMenuDropdown}
+                  ref={userMenuDropdownRef}
+                >
+                  <span>
+                    Usuarios <FaChevronDown className="dropdown-icon" />
+                  </span>
+                  {showUserMenuDropdown && (
+                    <ul className="dropdown-menu">
+                      <li>
+                        <NavLink to="/users">Lista de usuarios</NavLink>
+                      </li>
+                      <li>
+                        <NavLink to="/add-user">Añadir usuario</NavLink>
+                      </li>
+                    </ul>
+                  )}
+                </li>
+              )}
+
+              <li>
+                <NavLink to="/recommendations">Recomendaciones</NavLink>
               </li>
-              <li><NavLink to="/recommendations">Recomendaciones</NavLink></li>
-              <li><NavLink to="/comments">Comentarios</NavLink></li>
+              <li>
+                <NavLink to="/comments">Comentarios</NavLink>
+              </li>
+
+              {/*  Carrito (solo usuarios normales) */}
+              {role === "user" && (
+                <li>
+                  <NavLink to="/cart" className="cart-link">
+                    <FaShoppingCart className="cart-icon" /> Carrito
+                  </NavLink>
+                </li>
+              )}
             </ul>
           )}
         </div>
@@ -110,7 +167,10 @@ function Navbar() {
             <>
               <div onClick={toggleUserDropdown}>
                 <img
-                  src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  src={
+                    user?.profile_picture ||
+                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
                   alt="avatar"
                   className="avatar"
                 />
@@ -121,7 +181,10 @@ function Navbar() {
                 <div className="dropdownMenu">
                   <div className="userInfo">
                     <img
-                      src={user?.profile_picture || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                      src={
+                        user?.profile_picture ||
+                        "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                      }
                       alt="Foto perfil"
                       className="dropdownAvatar"
                     />
@@ -132,7 +195,10 @@ function Navbar() {
                   </div>
 
                   <div className="dropdownActions">
-                    <button className="dropdownItem" onClick={() => setIsEditing(true)}>
+                    <button
+                      className="dropdownItem"
+                      onClick={() => setIsEditing(true)}
+                    >
                       Editar perfil
                     </button>
                     <button className="dropdownItem" onClick={handleLogout}>
@@ -144,7 +210,9 @@ function Navbar() {
             </>
           ) : (
             <div className="guestLinks">
-              <NavLink to="/login" className="nav-button">Iniciar sesión</NavLink>
+              <NavLink to="/login" className="nav-button">
+                Iniciar sesión
+              </NavLink>
             </div>
           )}
         </div>
