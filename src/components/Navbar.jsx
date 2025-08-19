@@ -93,72 +93,75 @@ function Navbar() {
 
           {isAuthenticated && (
             <ul className="navbar-menu">
-              <li>
-                <NavLink to={role === "admin" ? "/dashboard" : "/user-home"}>
-                  {role === "admin" ? "Dashboard" : "Inicio"}
-                </NavLink>
-              </li>
+  <li>
+    <NavLink to={role === "admin" ? "/dashboard" : "/user-home"}>
+      {role === "admin" ? "Dashboard" : "Inicio"}
+    </NavLink>
+  </li>
 
-              <li
-                className="dropdown-toggle"
-                onClick={toggleProductDropdown}
-                ref={productDropdownRef}
-              >
-                <span>
-                  Productos <FaChevronDown className="dropdown-icon" />
-                </span>
-                {showProductDropdown && (
-                  <ul className="dropdown-menu">
-                    <li>
-                      <NavLink to="/products">Lista de productos</NavLink>
-                    </li>
-                    {role === "admin" && (
-                      <li>
-                        <NavLink to="/add-product">Añadir producto</NavLink>
-                      </li>
-                    )}
-                  </ul>
-                )}
-              </li>
+  <li
+    className="dropdown-toggle"
+    onClick={toggleProductDropdown}
+    ref={productDropdownRef}
+  >
+    <span>
+      Productos <FaChevronDown className="dropdown-icon" />
+    </span>
+    {showProductDropdown && (
+      <ul className="dropdown-menu">
+        <li>
+          <NavLink to="/products">Lista de productos</NavLink>
+        </li>
+        {role === "admin" && (
+          <li>
+            <NavLink to="/add-product">Añadir producto</NavLink>
+          </li>
+        )}
+      </ul>
+    )}
+  </li>
 
-              {role === "admin" && (
-                <li
-                  className="dropdown-toggle"
-                  onClick={toggleUserMenuDropdown}
-                  ref={userMenuDropdownRef}
-                >
-                  <span>
-                    Usuarios <FaChevronDown className="dropdown-icon" />
-                  </span>
-                  {showUserMenuDropdown && (
-                    <ul className="dropdown-menu">
-                      <li>
-                        <NavLink to="/users">Lista de usuarios</NavLink>
-                      </li>
-                      <li>
-                        <NavLink to="/add-user">Añadir usuario</NavLink>
-                      </li>
-                    </ul>
-                  )}
-                </li>
-              )}
+  {role === "admin" && (
+    <li
+      className="dropdown-toggle"
+      onClick={toggleUserMenuDropdown}
+      ref={userMenuDropdownRef}
+    >
+      <span>
+        Usuarios <FaChevronDown className="dropdown-icon" />
+      </span>
+      {showUserMenuDropdown && (
+        <ul className="dropdown-menu">
+          <li>
+            <NavLink to="/users">Lista de usuarios</NavLink>
+          </li>
+          <li>
+            <NavLink to="/add-user">Añadir usuario</NavLink>
+          </li>
+        </ul>
+      )}
+    </li>
+  )}
 
-              <li>
-                <NavLink to="/recommendations">Recomendaciones</NavLink>
-              </li>
-              <li>
-                <NavLink to="/comments">Comentarios</NavLink>
-              </li>
+  <li>
+    <NavLink to="/recommendations">Recomendaciones</NavLink>
+  </li>
+  <li>
+    <NavLink to="/comments">Comentarios</NavLink>
+  </li>
+  <li>
+    <NavLink to="/centros-acopio">Centros de Reciclaje</NavLink>
+  </li>
 
-              {/*  Carrito (solo usuarios normales) */}
-              {role === "user" && (
-                <li>
-                  <NavLink to="/cart" className="cart-link">
-                    <FaShoppingCart className="cart-icon" /> Carrito
-                  </NavLink>
-                </li>
-              )}
-            </ul>
+  {role === "user" && (
+    <li>
+      <NavLink to="/cart" className="cart-link">
+        <FaShoppingCart className="cart-icon" /> Carrito
+      </NavLink>
+    </li>
+  )}
+</ul>
+
           )}
         </div>
 
