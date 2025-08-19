@@ -25,14 +25,21 @@ function Login() {
       localStorage.setItem("token", access_token);
       localStorage.setItem("usuarioLogueado", logged_user);
 
-      // LÓGICA DE ROL SOLO EN FRONT (DEMO)
+      // ✅ DEMO: rol definido en front
       const isAdmin =
         nombreUsuario === ADMIN_USERNAME && contrasena === ADMIN_PASSWORD;
 
       localStorage.setItem("role", isAdmin ? "admin" : "user");
 
-      // Redirigir según rol
-      navigate(isAdmin ? "/dashboard" : "/user-home", { replace: true });
+      // ✅ Notificar a App.jsx que cambió el auth
+      window.dispatchEvent(new Event("auth-changed"));
+
+      // ✅ Redirigir según rol
+      if (isAdmin) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/user-home", { replace: true });
+      }
     } catch (err) {
       setError("Usuario o contraseña incorrectos");
     }
@@ -76,7 +83,9 @@ function Login() {
 
             <button type="submit">Entrar</button>
 
-            {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
+            {error && (
+              <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
+            )}
           </form>
 
           <div className="register-link">
