@@ -15,7 +15,12 @@ function Products() {
   const [alertModal, setAlertModal] = useState({ open: false, message: "" });
 
   //  Cantidad seleccionada (para carrito/compra)
-  const [cantidad, setCantidad] = useState(1);
+  const [cantidades, setCantidades] = useState({});
+
+  // actualizar cantidad de un producto
+  const handleCantidadChange = (id, value) => {
+    setCantidades((prev) => ({ ...prev, [id]: value }));
+};
 
   const role = localStorage.getItem("role"); // "admin" | "user"
   const token = localStorage.getItem("token");
@@ -55,37 +60,37 @@ function Products() {
   };
 
   // Comprar directo
-  const comprarAhora = async (prod) => {
-    try {
-      const res = await axios.post(
-        "/transactions/buy",
-        { product_id: prod.id, quantity: cantidad },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setAlertModal({
-        open: true,
-        message: res.data.message || "✅ Has comprado este producto.",
-      });
-    } catch (err) {
-      setAlertModal({
-        open: true,
-        message: err.response?.data?.detail || "❌ Error al comprar producto",
-      });
-    }
-  };
-
-  // Agregar al carrito
+const comprarAhora = async (prod) => {
+  try {
+    const res = await axios.post(
+      "/transactions/buy",
+      { product_id: prod.id, quantity: cantidades[prod.id] || 1 },  // ✅ ahora usa el valor correcto
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setAlertModal({
+      open: true,
+      message: res.data.message || "✅ Has comprado este producto.",
+    });
+    fetchProducts(); // refrescar stock
+  } catch (err) {
+    setAlertModal({
+      open: true,
+      message: err.response?.data?.detail || "❌ Error al comprar producto",
+    });
+  }
+};
+// Agregar al carrito
 const agregarAlCarrito = async (prod) => {
   try {
     const res = await axios.post(
       "/cart/add",
-      { product_id: prod.id, quantity: cantidad },
+      { product_id: prod.id, quantity: cantidades[prod.id] || 1 }, 
       { headers: { Authorization: `Bearer ${token}` } }
     );
     console.log("Carrito ->", res.data);
     setAlertModal({
       open: true,
-      message: `✅ ${prod.name} agregado al carrito (x${cantidad})`,
+      message: `✅ ${prod.name} agregado al carrito (x${cantidades[prod.id] || 1})`,
     });
   } catch (err) {
     console.error("❌ Error al agregar al carrito:", err.response?.data);
@@ -160,13 +165,13 @@ const agregarAlCarrito = async (prod) => {
                 <div className="product-actions">
                   <label>
                     Cantidad:
-                    <input
-                      type="number"
-                      min="1"
-                      max={prod.quantity}
-                      value={cantidad}
-                      onChange={(e) => setCantidad(Number(e.target.value))}
-                    />
+                  <input
+                    type="number"
+                    min="1"
+                    max={prod.quantity}
+                    value={cantidades[prod.id] || 1}
+                    onChange={(e) => handleCantidadChange(prod.id, Number(e.target.value))}
+                  />
                   </label>
                   <button className="btn-comprar" onClick={() => comprarAhora(prod)}>
                     Comprar ahora
