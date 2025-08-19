@@ -25,16 +25,16 @@ function Login() {
       localStorage.setItem("token", access_token);
       localStorage.setItem("usuarioLogueado", logged_user);
 
-      // ✅ DEMO: rol definido en front
+      // DEMO: rol definido en front
       const isAdmin =
         nombreUsuario === ADMIN_USERNAME && contrasena === ADMIN_PASSWORD;
 
       localStorage.setItem("role", isAdmin ? "admin" : "user");
 
-      // ✅ Notificar a App.jsx que cambió el auth
+      //  Notificar a App.jsx que cambió el auth
       window.dispatchEvent(new Event("auth-changed"));
 
-      // ✅ Redirigir según rol
+      // Redirigir según rol
       if (isAdmin) {
         navigate("/dashboard", { replace: true });
       } else {
