@@ -9,8 +9,9 @@ function ProductForm({ product, onClose, onSaved }) {
     carbon_footprint: "",
     recyclable_packaging: false,
     local_origin: false,
-    image_url: "",
+    image: null,
     price: "",
+    quantity: "",
     status: "disponible",
   });
 
@@ -24,25 +25,41 @@ function ProductForm({ product, onClose, onSaved }) {
         carbon_footprint: product.carbon_footprint || "",
         recyclable_packaging: product.recyclable_packaging || false,
         local_origin: product.local_origin || false,
-        image_url: product.image_url || "",
+        image: null, // iniciar siempre en null
         price: product.price || "",
+        quantity: product.quantity || "",
         status: product.status || "disponible",
       });
     }
   }, [product]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({
-      ...form,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    const { name, value, type, checked, files } = e.target;
+    if (type === "file") {
+      setForm({ ...form, [name]: files[0] });
+    } else {
+      setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/products/${product.id}`, form);
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("category", form.category);
+      formData.append("carbon_footprint", form.carbon_footprint);
+      formData.append("recyclable_packaging", form.recyclable_packaging);
+      formData.append("local_origin", form.local_origin);
+      formData.append("price", form.price);
+      formData.append("quantity", form.quantity);
+      formData.append("status", form.status);
+      if (form.image) formData.append("image", form.image);
+
+      await axios.put(`/products/${product.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       setMensaje("Producto actualizado exitosamente.");
       if (onSaved) onSaved();
     } catch (err) {
@@ -57,7 +74,11 @@ function ProductForm({ product, onClose, onSaved }) {
         <button className="modal-close" onClick={onClose}>×</button>
 
         <h2>Editar Producto</h2>
-        <form id="product-form" className="product-form grid" onSubmit={handleSubmit}>
+        <form
+          id="product-form"
+          className="product-form grid"
+          onSubmit={handleSubmit}
+        >
           {mensaje && <p className="message">{mensaje}</p>}
 
           <div className="form-group full-width">
@@ -104,6 +125,18 @@ function ProductForm({ product, onClose, onSaved }) {
             />
           </div>
 
+          <div className="form-group">
+            <label>Stock:</label>
+            <input
+              type="number"
+              name="quantity"
+              value={form.quantity}
+              onChange={handleChange}
+              required
+              min="0"
+            />
+          </div>
+
           <div className="checkbox-group full-width">
             <label>
               <input
@@ -127,13 +160,8 @@ function ProductForm({ product, onClose, onSaved }) {
           </div>
 
           <div className="form-group full-width">
-            <label>URL de imagen:</label>
-            <input
-              type="text"
-              name="image_url"
-              value={form.image_url}
-              onChange={handleChange}
-            />
+            <label>Imagen del producto:</label>
+            <input type="file" name="image" onChange={handleChange} />
           </div>
 
           <div className="form-group">

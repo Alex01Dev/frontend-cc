@@ -19,12 +19,11 @@ function Navbar() {
   const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem("token");
   const role = localStorage.getItem("role"); // "admin" | "user"
+  const defaultAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
   const toggleUserDropdown = () => setShowUserDropdown(!showUserDropdown);
-  const toggleProductDropdown = () =>
-    setShowProductDropdown(!showProductDropdown);
-  const toggleUserMenuDropdown = () =>
-    setShowUserMenuDropdown(!showUserMenuDropdown);
+  const toggleProductDropdown = () => setShowProductDropdown(!showProductDropdown);
+  const toggleUserMenuDropdown = () => setShowUserMenuDropdown(!showUserMenuDropdown);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -35,8 +34,8 @@ function Navbar() {
 
   const handleSaveProfile = async (updatedData) => {
     try {
-      await axios.put(`/users/${user.id}`, updatedData);
-      setUser({ ...user, ...updatedData });
+      const res = await axios.put(`/users/${user.id}`, updatedData);
+      setUser(res.data); // Actualiza toda la info, incluyendo la foto
       setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar perfil:", error);
@@ -61,22 +60,13 @@ function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        userDropdownRef.current &&
-        !userDropdownRef.current.contains(event.target)
-      ) {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
         setShowUserDropdown(false);
       }
-      if (
-        productDropdownRef.current &&
-        !productDropdownRef.current.contains(event.target)
-      ) {
+      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target)) {
         setShowProductDropdown(false);
       }
-      if (
-        userMenuDropdownRef.current &&
-        !userMenuDropdownRef.current.contains(event.target)
-      ) {
+      if (userMenuDropdownRef.current && !userMenuDropdownRef.current.contains(event.target)) {
         setShowUserMenuDropdown(false);
       }
     };
@@ -89,91 +79,79 @@ function Navbar() {
     <>
       <nav className="navbar">
         <div className="navbar-left">
-          <span className="logo">Consumo Consciente</span>
+          <span className="logo">EcoShop</span>
 
           {isAuthenticated && (
             <ul className="navbar-menu">
-  <li>
-    <NavLink to={role === "admin" ? "/dashboard" : "/user-home"}>
-      {role === "admin" ? "Dashboard" : "Inicio"}
-    </NavLink>
-  </li>
+              <li>
+                <NavLink to={role === "admin" ? "/dashboard" : "/user-home"}>
+                  {role === "admin" ? "Dashboard" : "Inicio"}
+                </NavLink>
+              </li>
 
-  <li
-    className="dropdown-toggle"
-    onClick={toggleProductDropdown}
-    ref={productDropdownRef}
-  >
-    <span>
-      Productos <FaChevronDown className="dropdown-icon" />
-    </span>
-    {showProductDropdown && (
-      <ul className="dropdown-menu">
-        <li>
-          <NavLink to="/products">Lista de productos</NavLink>
-        </li>
-        {role === "admin" && (
-          <li>
-            <NavLink to="/add-product">Añadir producto</NavLink>
-          </li>
-        )}
-      </ul>
-    )}
-  </li>
+              <li className="dropdown-toggle" onClick={toggleProductDropdown} ref={productDropdownRef}>
+                <span>
+                  Productos <FaChevronDown className="dropdown-icon" />
+                </span>
+                {showProductDropdown && (
+                  <ul className="dropdown-menu">
+                    <li>
+                      <NavLink to="/products">Lista de productos</NavLink>
+                    </li>
+                    {role === "admin" && (
+                      <li>
+                        <NavLink to="/add-product">Añadir producto</NavLink>
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </li>
 
-  {role === "admin" && (
-    <li
-      className="dropdown-toggle"
-      onClick={toggleUserMenuDropdown}
-      ref={userMenuDropdownRef}
-    >
-      <span>
-        Usuarios <FaChevronDown className="dropdown-icon" />
-      </span>
-      {showUserMenuDropdown && (
-        <ul className="dropdown-menu">
-          <li>
-            <NavLink to="/users">Lista de usuarios</NavLink>
-          </li>
-          <li>
-            <NavLink to="/add-user">Añadir usuario</NavLink>
-          </li>
-        </ul>
-      )}
-    </li>
-  )}
+              {role === "admin" && (
+                <li className="dropdown-toggle" onClick={toggleUserMenuDropdown} ref={userMenuDropdownRef}>
+                  <span>
+                    Usuarios <FaChevronDown className="dropdown-icon" />
+                  </span>
+                  {showUserMenuDropdown && (
+                    <ul className="dropdown-menu">
+                      <li>
+                        <NavLink to="/users">Lista de usuarios</NavLink>
+                      </li>
+                      <li>
+                        <NavLink to="/add-user">Añadir usuario</NavLink>
+                      </li>
+                    </ul>
+                  )}
+                </li>
+              )}
 
-  <li>
-    <NavLink to="/recommendations">Recomendaciones</NavLink>
-  </li>
-  <li>
-    <NavLink to="/comments">Comentarios</NavLink>
-  </li>
-  <li>
-    <NavLink to="/centros-acopio">Centros de Reciclaje</NavLink>
-  </li>
+              <li>
+                <NavLink to="/recommendations">Recomendaciones</NavLink>
+              </li>
+              <li>
+                <NavLink to="/comments">Comentarios</NavLink>
+              </li>
+              <li>
+                <NavLink to="/centros-acopio">Centros de Reciclaje</NavLink>
+              </li>
 
-  {role === "user" && (
-    <li>
-      <NavLink to="/cart" className="cart-link">
-        <FaShoppingCart className="cart-icon" /> Carrito
-      </NavLink>
-    </li>
-  )}
-</ul>
-
+              {role === "user" && (
+                <li>
+                  <NavLink to="/cart" className="cart-link">
+                    <FaShoppingCart className="cart-icon" /> Carrito
+                  </NavLink>
+                </li>
+              )}
+            </ul>
           )}
         </div>
 
         <div className="userSection" ref={userDropdownRef}>
           {isAuthenticated ? (
             <>
-              <div onClick={toggleUserDropdown}>
+              <div className="avatar-container" onClick={toggleUserDropdown}>
                 <img
-                  src={
-                    user?.profile_picture ||
-                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                  }
+                  src={user?.profile_picture || defaultAvatar}
                   alt="avatar"
                   className="avatar"
                 />
@@ -184,10 +162,7 @@ function Navbar() {
                 <div className="dropdownMenu">
                   <div className="userInfo">
                     <img
-                      src={
-                        user?.profile_picture ||
-                        "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                      }
+                      src={user?.profile_picture || defaultAvatar}
                       alt="Foto perfil"
                       className="dropdownAvatar"
                     />
@@ -198,10 +173,7 @@ function Navbar() {
                   </div>
 
                   <div className="dropdownActions">
-                    <button
-                      className="dropdownItem"
-                      onClick={() => setIsEditing(true)}
-                    >
+                    <button className="dropdownItem" onClick={() => setIsEditing(true)}>
                       Editar perfil
                     </button>
                     <button className="dropdownItem" onClick={handleLogout}>

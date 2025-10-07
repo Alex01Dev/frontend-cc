@@ -6,7 +6,7 @@ function EditProfileModal({ isOpen, onClose, userData, onSave }) {
     username: "",
     email: "",
     status: "",
-    profile_picture: "",
+    profile_picture: null,
   });
 
   useEffect(() => {
@@ -15,19 +15,29 @@ function EditProfileModal({ isOpen, onClose, userData, onSave }) {
         username: userData.username || "",
         email: userData.email || "",
         status: userData.status || "",
-        profile_picture: userData.profile_picture || "",
+        profile_picture: null, // inicializamos como null para nueva subida
       });
     }
   }, [userData]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const { name, value, files, type } = e.target;
+    if (type === "file") {
+      setForm({ ...form, [name]: files[0] });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(form); // Llama a la función enviada por el navbar
+    const formData = new FormData();
+    formData.append("username", form.username);
+    formData.append("email", form.email);
+    formData.append("status", form.status);
+    if (form.profile_picture) formData.append("profile_picture", form.profile_picture);
+
+    onSave(formData); // enviar FormData al backend
   };
 
   if (!isOpen) return null;
@@ -50,8 +60,8 @@ function EditProfileModal({ isOpen, onClose, userData, onSave }) {
             <option value="Inactive">Inactivo</option>
           </select>
 
-          <label>Foto de perfil (URL):</label>
-          <input name="profile_picture" value={form.profile_picture} onChange={handleChange} />
+          <label>Foto de perfil:</label>
+          <input type="file" name="profile_picture" onChange={handleChange} />
 
           <button className="save-btn" type="submit">Guardar cambios</button>
         </form>
@@ -59,5 +69,6 @@ function EditProfileModal({ isOpen, onClose, userData, onSave }) {
     </div>
   );
 }
+
 
 export default EditProfileModal;

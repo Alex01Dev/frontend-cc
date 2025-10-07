@@ -19,6 +19,13 @@ function Products() {
   const navigate = useNavigate();
 
   const handleCantidadChange = (id, value) => {
+    if (!Number.isInteger(value)) {
+      setAlertModal({
+        open: true,
+        message: "❌ La cantidad debe ser un número entero. No se permiten decimales.",
+      });
+      return;
+    }
     setCantidades((prev) => ({ ...prev, [id]: value }));
   };
 
@@ -104,7 +111,7 @@ function Products() {
     try {
       await axios.post(
         "/interacciones",
-        { product_id: prod.id, action: "click" }, // Ajusta según tu schema InteractionCreate
+        { product_id: prod.id, action: "click" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (err) {
@@ -114,7 +121,6 @@ function Products() {
         message: "❌ Error al registrar la interacción",
       });
     } finally {
-      // Navegar a comentarios aunque falle la interacción
       navigate(`/comments?product=${prod.id}`);
     }
   };
@@ -191,12 +197,19 @@ function Products() {
                   <label>
                     Cantidad:
                     <input
-                      type="number"
-                      min="1"
-                      max={prod.quantity}
-                      value={cantidades[prod.id] || 1}
-                      onChange={(e) => { e.stopPropagation(); handleCantidadChange(prod.id, Number(e.target.value)); }}
-                    />
+  type="number"
+  min="1"
+  max={prod.quantity}
+  step="1"
+  value={cantidades[prod.id] || 1}
+  onChange={(e) => {
+    e.stopPropagation();
+    const val = Number(e.target.value);
+    handleCantidadChange(prod.id, val);
+  }}
+  onKeyDown={(e) => e.preventDefault()} // ⛔️ bloquea escribir manual
+/>
+
                   </label>
                   <button
                     className="btn-comprar"
