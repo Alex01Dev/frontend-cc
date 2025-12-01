@@ -9,7 +9,6 @@ function Recommendations() {
   const [cantidades, setCantidades] = useState({});
   const [alertModal, setAlertModal] = useState({ open: false, message: "" });
 
-  const role = localStorage.getItem("role"); 
   const token = localStorage.getItem("token");
   const navigate = useNavigate(); 
 
@@ -66,11 +65,6 @@ function Recommendations() {
   // Agregar al carrito
   const agregarAlCarrito = async (prod) => {
     try {
-      const res = await axios.post(
-        "/cart/add",
-        { product_id: prod.id, quantity: cantidades[prod.id] || 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
       setAlertModal({
         open: true,
         message: `✅ ${prod.name} agregado al carrito (x${cantidades[prod.id] || 1})`,
