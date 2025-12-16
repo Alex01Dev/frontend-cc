@@ -2,6 +2,11 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axiosConfig";
 import ProductForm from "../components/ProductForm";
+import {
+  addToLocalCart,
+  getLocalCart,
+  clearLocalCart,
+} from "../utils/localCart";
 import "../styles/Products.css";
 
 function Products() {
@@ -19,14 +24,15 @@ function Products() {
   const navigate = useNavigate();
 
   const handleCantidadChange = (id, value) => {
-    if (!Number.isInteger(value)) {
+    const int = Number(value);
+    if (!Number.isInteger(int) || int < 1) {
       setAlertModal({
         open: true,
-        message: "❌ La cantidad debe ser un número entero. No se permiten decimales.",
+        message: "❌ La cantidad debe ser un número entero mayor o igual a 1.",
       });
       return;
     }
-    setCantidades((prev) => ({ ...prev, [id]: value }));
+    setCantidades((prev) => ({ ...prev, [id]: int }));
   };
 
   // Obtener productos
@@ -38,9 +44,54 @@ function Products() {
       setProducts(res.data);
     } catch (err) {
       setMensaje("Error al obtener productos.");
+      console.error(err);
     }
   }, [token]);
 
+  // Sincronizar local_cart si hay datos y estamos online (al montar)
+  useEffect(() => {
+    const trySyncOnMount = async () => {
+      if (!navigator.onLine) return;
+      const local = getLocalCart();
+      if (local.length === 0) return;
+
+      try {
+        await axios.post("/cart/sync", local, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        clearLocalCart();
+        fetchProducts();
+      } catch (err) {
+        console.log("Error al sincronizar local_cart on mount", err);
+      }
+    };
+
+    trySyncOnMount();
+  }, [token, fetchProducts]);
+
+  // Escuchar evento 'online' para sincronizar cuando vuelva la conexión
+  useEffect(() => {
+    const syncLocalCart = async () => {
+      if (!navigator.onLine) return;
+      const local = getLocalCart();
+      if (local.length === 0) return;
+
+      try {
+        await axios.post("/cart/sync", local, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        clearLocalCart();
+        fetchProducts();
+      } catch (error) {
+        console.log("❌ Error al sincronizar carrito local.", error);
+      }
+    };
+
+    window.addEventListener("online", syncLocalCart);
+    return () => window.removeEventListener("online", syncLocalCart);
+  }, [token, fetchProducts]);
+
+  // Cargar productos al entrar a la página
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -54,8 +105,9 @@ function Products() {
       });
       setMensaje("Producto eliminado.");
       fetchProducts();
-    } catch {
+    } catch (err) {
       setMensaje("Error al eliminar.");
+      console.error(err);
     }
   };
 
@@ -67,10 +119,22 @@ function Products() {
 
   // Comprar ahora
   const comprarAhora = async (prod) => {
+    const cantidad = cantidades[prod.id] || 1;
+
+    if (cantidad < 1) {
+      setAlertModal({ open: true, message: "❌ Ingresa una cantidad válida (>=1)" });
+      return;
+    }
+
+    if (cantidad > prod.quantity) {
+      setAlertModal({ open: true, message: "❌ La cantidad supera el stock disponible." });
+      return;
+    }
+
     try {
       const res = await axios.post(
         "/transactions/buy",
-        { product_id: prod.id, quantity: cantidades[prod.id] || 1 },
+        { product_id: prod.id, quantity: cantidad },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setAlertModal({
@@ -83,26 +147,52 @@ function Products() {
         open: true,
         message: err.response?.data?.detail || "❌ Error al comprar producto",
       });
+      console.error(err);
     }
   };
 
   // Agregar al carrito
   const agregarAlCarrito = async (prod) => {
+    const cantidad = cantidades[prod.id] || 1;
+
+    if (cantidad < 1) {
+      setAlertModal({ open: true, message: "❌ Ingresa una cantidad válida (>=1)" });
+      return;
+    }
+
+    if (cantidad > prod.quantity) {
+      setAlertModal({ open: true, message: "❌ La cantidad supera el stock disponible." });
+      return;
+    }
+
+    // Si NO hay internet → Guardar en localStorage (utilidad)
+    if (!navigator.onLine) {
+      addToLocalCart({ product_id: prod.id, quantity: cantidad, name: prod.name, price: prod.price });
+      setAlertModal({
+        open: true,
+        message: `🟡 Sin conexión — agregado al carrito local (x${cantidad})`,
+      });
+      return; // evitar ir al backend si no hay internet
+    }
+
+    // Si sí hay internet → Backend normal
     try {
       await axios.post(
         "/cart/add",
-        { product_id: prod.id, quantity: cantidades[prod.id] || 1 },
+        { product_id: prod.id, quantity: cantidad },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setAlertModal({
         open: true,
-        message: `✅ ${prod.name} agregado al carrito (x${cantidades[prod.id] || 1})`,
+        message: `✅ ${prod.name} agregado al carrito (x${cantidad})`,
       });
     } catch (err) {
       setAlertModal({
         open: true,
         message: err.response?.data?.detail || "❌ Error al agregar al carrito",
       });
+      console.error(err);
     }
   };
 
@@ -116,10 +206,7 @@ function Products() {
       );
     } catch (err) {
       console.error("Error al registrar interacción:", err);
-      setAlertModal({
-        open: true,
-        message: "❌ Error al registrar la interacción",
-      });
+      setAlertModal({ open: true, message: "❌ Error al registrar la interacción" });
     } finally {
       navigate(`/comments?product=${prod.id}`);
     }
@@ -143,10 +230,7 @@ function Products() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
+        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="">Todas las categorías</option>
           <option value="Alimentos">Alimentos</option>
           <option value="Ropa">Ropa</option>
@@ -161,12 +245,7 @@ function Products() {
 
       <div className="product-grid">
         {filteredProducts.map((prod) => (
-          <div
-            key={prod.id}
-            className="product-card"
-            onClick={() => handleProductClick(prod)}
-            style={{ cursor: "pointer" }}
-          >
+          <div key={prod.id} className="product-card" onClick={() => handleProductClick(prod)} style={{ cursor: "pointer" }}>
             <img src={prod.image_url} alt={prod.name} />
             <div className="product-info">
               <h3>{prod.name}</h3>
@@ -180,47 +259,34 @@ function Products() {
 
               {role === "admin" ? (
                 <div className="product-actions">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleEdit(prod); }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="delete"
-                    onClick={(e) => { e.stopPropagation(); eliminarProducto(prod.id); }}
-                  >
-                    Eliminar
-                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); handleEdit(prod); }}>Editar</button>
+                  <button className="delete" onClick={(e) => { e.stopPropagation(); eliminarProducto(prod.id); }}>Eliminar</button>
                 </div>
               ) : (
                 <div className="product-actions">
                   <label>
                     Cantidad:
                     <input
-  type="number"
-  min="1"
-  max={prod.quantity}
-  step="1"
-  value={cantidades[prod.id] || 1}
-  onChange={(e) => {
-    e.stopPropagation();
-    const val = Number(e.target.value);
-    handleCantidadChange(prod.id, val);
-  }}
-  onKeyDown={(e) => e.preventDefault()} // ⛔️ bloquea escribir manual
-/>
-
+                      type="number"
+                      min="1"
+                      max={prod.quantity}
+                      step="1"
+                      value={cantidades[prod.id] || 1}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        const val = Number(e.target.value);
+                        handleCantidadChange(prod.id, val);
+                      }}
+                      onKeyDown={(e) => {
+                        if (["e", "E", "-", "+"].includes(e.key)) e.preventDefault();
+                      }}
+                    />
                   </label>
-                  <button
-                    className="btn-comprar"
-                    onClick={(e) => { e.stopPropagation(); comprarAhora(prod); }}
-                  >
+
+                  <button className="btn-comprar" onClick={(e) => { e.stopPropagation(); comprarAhora(prod); }}>
                     Comprar ahora
                   </button>
-                  <button
-                    className="btn-carrito"
-                    onClick={(e) => { e.stopPropagation(); agregarAlCarrito(prod); }}
-                  >
+                  <button className="btn-carrito" onClick={(e) => { e.stopPropagation(); agregarAlCarrito(prod); }}>
                     Agregar al carrito 🛒
                   </button>
                 </div>
@@ -231,15 +297,7 @@ function Products() {
       </div>
 
       {showModal && role === "admin" && (
-        <ProductForm
-          product={productToEdit}
-          onClose={() => setShowModal(false)}
-          onSaved={() => {
-            setShowModal(false);
-            fetchProducts();
-            setProductToEdit(null);
-          }}
-        />
+        <ProductForm product={productToEdit} onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); fetchProducts(); setProductToEdit(null); }} />
       )}
 
       {alertModal.open && (

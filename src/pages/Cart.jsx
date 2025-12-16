@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "../api/axiosConfig";
+import {
+  getLocalCart,
+  saveLocalCart,
+  removeFromLocalCart,
+  updateLocalCartQuantity,
+  clearLocalCart,
+} from "../utils/localCart";
 import "../styles/Cart.css";
 
 function Cart() {
@@ -9,7 +16,7 @@ function Cart() {
 
   const token = localStorage.getItem("token");
 
-  // ✅ Traer carrito
+  // Traer carrito desde backend (si online)
   const fetchCart = useCallback(async () => {
     try {
       const res = await axios.get("/cart/mycart", {
@@ -18,15 +25,42 @@ function Cart() {
       setCart(res.data);
     } catch (err) {
       setMensaje("❌ Error al obtener el carrito.");
+      console.error(err);
     }
   }, [token]);
 
+  // Al montar: si hay local_cart y estamos online -> sincronizar; si offline -> mostrar local
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+    const init = async () => {
+      const local = getLocalCart();
+      if (navigator.onLine) {
+        if (local.length > 0) {
+          try {
+            await axios.post("/cart/sync", local, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            clearLocalCart();
+          } catch (err) {
+            console.log("Error al sincronizar local_cart on mount", err);
+          }
+        }
+        await fetchCart();
+      } else {
+        setCart(local);
+        setMensaje("⚠ Estás sin internet. Mostrando carrito guardado localmente.");
+      }
+    };
 
-  // ✅ Comprar todo el carrito
+    init();
+  }, [fetchCart, token]);
+
+  // Comprar todo el carrito (intenta comprar backend)
   const handlePurchase = async () => {
+    if (!navigator.onLine) {
+      setInfoModal({ open: true, message: "🔴 No hay conexión. Primero sincroniza para comprar." });
+      return;
+    }
+
     try {
       const res = await axios.post(
         "/cart/purchase",
@@ -50,49 +84,101 @@ function Cart() {
       }
 
       setInfoModal({ open: true, message: summary });
-      setCart([]); // limpiar el carrito en frontend
+      setCart([]);
+      clearLocalCart();
     } catch (err) {
-      const msg =
-        err.response?.data?.detail || "❌ Error al realizar la compra.";
+      const msg = err.response?.data?.detail || "❌ Error al realizar la compra.";
       setInfoModal({ open: true, message: msg });
+      console.error(err);
     }
   };
 
-  // ✅ Vaciar carrito
+  // Vaciar carrito
   const handleClearCart = async () => {
+    if (!navigator.onLine) {
+      // limpiar local si offline
+      clearLocalCart();
+      setCart([]);
+      setInfoModal({ open: true, message: "🟡 Carrito local vaciado." });
+      return;
+    }
+
     try {
       await axios.delete("/cart/clear", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCart([]);
+      clearLocalCart();
       setInfoModal({ open: true, message: "🛒 Carrito vaciado." });
     } catch (err) {
-      const msg =
-        err.response?.data?.detail || "❌ Error al vaciar carrito.";
+      const msg = err.response?.data?.detail || "❌ Error al vaciar carrito.";
       setInfoModal({ open: true, message: msg });
+      console.error(err);
     }
   };
 
-  // ✅ Eliminar un producto del carrito
+  // Eliminar un producto
   const handleRemove = async (productId) => {
+    if (!navigator.onLine) {
+      const updated = removeFromLocalCart(productId);
+      setCart(updated);
+      setInfoModal({ open: true, message: "🗑️ Producto eliminado del carrito local." });
+      return;
+    }
+
     try {
       await axios.delete(`/cart/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCart(cart.filter((i) => i.product_id !== productId));
+      // actualizar vista
+      setCart((prev) => prev.filter((i) => i.product_id !== productId));
+      // intentar también limpiar del local si existiera
+      removeFromLocalCart(productId);
       setInfoModal({ open: true, message: "🗑️ Producto eliminado del carrito." });
     } catch (err) {
-      const msg =
-        err.response?.data?.detail || "❌ Error al eliminar producto.";
+      const msg = err.response?.data?.detail || "❌ Error al eliminar producto.";
       setInfoModal({ open: true, message: msg });
+      console.error(err);
     }
   };
 
-  // ✅ Calcular total
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  // Actualizar cantidad local o UI
+  const handleUpdateQuantity = (productId, qty) => {
+    if (qty < 1) return;
+    if (!navigator.onLine) {
+      const updated = updateLocalCartQuantity(productId, qty);
+      setCart(updated);
+      return;
+    }
+    // si está online: actualizamos UI y luego podrías llamar al endpoint para actualizar
+    setCart((prev) => prev.map((p) => (p.product_id === productId ? { ...p, quantity: qty } : p)));
+    // opcional: llamar endpoint para actualizar cantidad en backend si tienes uno
+  };
+
+  // total
+  const total = cart.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
+
+  // sincronizar cuando vuelva la conexión
+  useEffect(() => {
+    const syncLocalCart = async () => {
+      if (!navigator.onLine) return;
+      const local = getLocalCart();
+      if (local.length === 0) return;
+
+      try {
+        await axios.post("/cart/sync", local, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        clearLocalCart();
+        fetchCart();
+      } catch (error) {
+        console.log("Error al sincronizar local_cart on online event", error);
+      }
+    };
+
+    window.addEventListener("online", syncLocalCart);
+    return () => window.removeEventListener("online", syncLocalCart);
+  }, [fetchCart, token]);
 
   return (
     <main className="cart-main">
@@ -106,21 +192,25 @@ function Cart() {
           <div className="cart-list">
             {cart.map((item) => (
               <div key={item.product_id} className="cart-item">
-                <img src={item.image_url} alt={item.name} />
+                {item.image_url && <img src={item.image_url} alt={item.name} />}
                 <div className="cart-info">
                   <h3>{item.name}</h3>
-                  <p>Precio: ${item.price}</p>
-                  <p>Cantidad: {item.quantity}</p>
+                  <p>Precio: ${item.price ?? "0"}</p>
                   <p>
-                    Subtotal:{" "}
-                    <strong>${(item.price * item.quantity).toFixed(2)}</strong>
+                    Cantidad:{" "}
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => handleUpdateQuantity(item.product_id, Number(e.target.value))}
+                    />
+                  </p>
+                  <p>
+                    Subtotal: <strong>${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</strong>
                   </p>
                 </div>
                 <div className="cart-actions">
-                  <button
-                    className="remove-btn"
-                    onClick={() => handleRemove(item.product_id)}
-                  >
+                  <button className="remove-btn" onClick={() => handleRemove(item.product_id)}>
                     ❌ Eliminar
                   </button>
                 </div>
@@ -140,16 +230,12 @@ function Cart() {
         </>
       )}
 
-      {/* ✅ Modal de información */}
+      {/* Modal de información */}
       {infoModal.open && (
         <div className="modal-overlay">
           <div className="modal-content">
             <pre style={{ whiteSpace: "pre-wrap" }}>{infoModal.message}</pre>
-            <button
-              onClick={() => setInfoModal({ open: false, message: "" })}
-            >
-              Cerrar
-            </button>
+            <button onClick={() => setInfoModal({ open: false, message: "" })}>Cerrar</button>
           </div>
         </div>
       )}
