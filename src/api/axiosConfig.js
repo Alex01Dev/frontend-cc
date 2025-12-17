@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000", // Tu backend FastAPI
+  baseURL: "https://backend-cc-ui7i.onrender.com", // Tu backend FastAPI
   timeout: 15000, // 15s para evitar cuelgues
   // withCredentials: true, // ← solo si usas cookies/sesiones
 });
