@@ -5,9 +5,9 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/favicon.ico',
-  '/manifest.json',
   '/logo192.png',
   '/logo512.png',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', event => {
@@ -29,14 +29,19 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const { request } = event;
 
-  if (
-    request.method !== 'GET' ||
-    request.url.includes('backend-cc-ui7i.onrender.com')
-  ) {
+  // 🚫 NO interceptar APIs
+  if (request.url.includes('backend-cc-ui7i.onrender.com')) {
+    return;
+  }
+
+  // 🚫 NO interceptar métodos distintos a GET
+  if (request.method !== 'GET') {
     return;
   }
 
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request))
+    caches.match(request).then(response => {
+      return response || fetch(request);
+    })
   );
 });
