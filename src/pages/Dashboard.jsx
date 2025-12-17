@@ -24,7 +24,7 @@ function Dashboard() {
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
     // Cargar todos los datos del ML supervisado y estadísticas
-    axios.get("http://localhost:8000/ml/dashboard", config)
+    axios.get("https://backend-cc-ui7i.onrender.com/ml/dashboard", config)
       .then(res => {
         setTopProducts(res.data.top_products || []);
         setConsumoData(res.data.consumo_data || []);

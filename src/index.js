@@ -9,8 +9,6 @@ root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
-  
 );
-serviceWorkerRegistration.register();
 
-
+serviceWorkerRegistration.unregister();
