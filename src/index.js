@@ -11,4 +11,5 @@ root.render(
   </React.StrictMode>
 );
 
-serviceWorkerRegistration.unregister();
+// ✅ ACTIVA EL SERVICE WORKER
+serviceWorkerRegistration.register();
